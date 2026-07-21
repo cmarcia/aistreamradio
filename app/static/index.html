@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Stream Radio</title>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<link rel="stylesheet" href="/static/CSS/style.css">
+</head>
+<body>
+  <header>
+    <h1><span class="logo-badge">🐾</span><span id="brandName">AI Stream Radio</span></h1>
+    <div class="station-select-container">
+      <label for="stationSelect">STATION:</label>
+      <select id="stationSelect" aria-label="Select Radio Station">
+        <option value="">Loading stations...</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <div class="art-container">
+      <img class="art" id="coverArt" alt="Album art" crossorigin="anonymous">
+      <div class="visualizer" id="visualizer">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+    </div>
+
+    <div class="info">
+      <div class="station-meta-row">
+        <span class="station-genre-pill" id="stationGenrePill">GENRE: LIVE BROADCAST</span>
+      </div>
+      <p class="artist" id="artistName">&nbsp;</p>
+      <p class="album" id="albumName">&nbsp;</p>
+      <p class="track" id="trackName">&nbsp;</p>
+      <p class="quality" id="sourceQuality">Source quality: —</p>
+      <p class="quality" id="streamQuality">Stream quality: 48kHz FLAC / HLS Lossless</p>
+
+      <div class="rate">
+        <span>Rate this track:</span>
+        <button id="thumbUp" aria-label="Like">👍 <span id="thumbUpCount">0</span></button>
+        <button id="thumbDown" aria-label="Dislike">👎 <span id="thumbDownCount">0</span></button>
+      </div>
+
+      <div class="player-bar">
+        <button class="icon-btn" id="playBtn" aria-label="Play/Pause">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        </button>
+        <span class="time" id="timeDisplay">0:00 / Live</span>
+        <button class="icon-btn" id="muteBtn" aria-label="Mute">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
+        </button>
+        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+      </div>
+      <div class="status-line" id="statusMsg"></div>
+    </div>
+  </main>
+
+  <section class="previous">
+    <div class="previous-inner">
+      <h2>Previous tracks:</h2>
+      <ul id="historyList">
+        <li class="empty">Nothing played yet this session.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="previous">
+    <div class="previous-inner">
+      <h2>Songs you disliked:</h2>
+      <ul id="dislikedList">
+        <li class="empty">You haven't disliked any tracks yet.</li>
+      </ul>
+      <div class="pager" id="dislikedPager" hidden>
+        <button id="dislikedPrevBtn" type="button">&larr; Prev</button>
+        <span id="dislikedPageInfo"></span>
+        <button id="dislikedNextBtn" type="button">Next &rarr;</button>
+      </div>
+    </div>
+  </section>
+
+  <audio id="audio" preload="none"></audio>
+
+<script src="/static/Script/formatters.js"></script>
+<script src="/static/Script/util.js"></script>
+<script src="/static/Script/player.js"></script>
+<script src="/static/Script/rating.js"></script>
+<script src="/static/Script/disliked.js"></script>
+<script src="/static/Script/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "radiostation-frontend",
+  "private": true,
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

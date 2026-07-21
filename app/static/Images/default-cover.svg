@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e2230" />
+      <stop offset="100%" stop-color="#0b0e17" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="500" height="500" fill="url(#bg)" />
+  <rect width="500" height="500" fill="url(#grid)" />
+  <circle cx="250" cy="230" r="130" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="2" />
+  <circle cx="250" cy="230" r="95" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="3" />
+  
+  <!-- Gray Musical Note Icon -->
+  <g transform="translate(195, 140) scale(2.2)" fill="#8e8ea0">
+    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+  </g>
+  
+  <text x="250" y="415" font-family="sans-serif" font-size="18" font-weight="700" fill="#71717a" text-anchor="middle" letter-spacing="3">NO ALBUM ART</text>
+</svg>

@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Path is inside the container; radiostation_data is a named Docker
+      # volume (not a host bind-mount) so the SQLite file persists across
+      # rebuilds. On Docker Desktop for Mac, bind-mounting the DB directory
+      # from the host routes SQLite's file locks through the VirtioFS/
+      # gRPC-FUSE "fakeowner" overlay, which can spuriously report the
+      # database as read-only mid-write.
+      DATABASE_URL: sqlite:///./data/radiostation.db
+    volumes:
+      - radiostation_data:/code/data
+      # Mount source for live-reload during development.
+      - ./app:/code/app
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+volumes:
+  radiostation_data:
