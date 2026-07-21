@@ -56,7 +56,8 @@ aistreamradio/
 │   ├── config.py             # Pydantic Settings (DATABASE_URL, APP_NAME, default colors, page size)
 │   ├── database.py           # SQLAlchemy engine, SessionLocal, get_db dependency
 │   ├── icy.py                # Async ICY stream metadata extractor engine
-│   ├── main.py               # FastAPI application entry point
+│   ├── logging_config.py     # Structured logger configuration & formatting
+│   ├── main.py               # FastAPI application entry point with middleware & global exception handlers
 │   ├── models.py             # SQLAlchemy ORM models (Station, Genre, Song, SongRating)
 │   ├── repositories/         # Database Repository Pattern implementations
 │   │   ├── deps.py           # FastAPI Dependency Injection providers (get_genre_repository, get_station_repository, get_song_repository)
