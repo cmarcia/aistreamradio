@@ -26,13 +26,14 @@ def test_stations_auto_seeding_when_empty(client):
     res = client.get("/stations")
     assert res.status_code == 200
     stations = res.json()
-    assert len(stations) == 9
+    assert len(stations) == 12
     station_names = [s["name"] for s in stations]
     assert "Galglatz (גלגלצ)" in station_names
     assert "Metal Detector" in station_names
     assert "Classic Rock Vault" in station_names
     assert "WQXR 105.9 FM Classical" in station_names
     assert "Klassik Radio Symphony" in station_names
+    assert "Sonic Universe NuJazz" in station_names
     for s in stations:
         assert s["stream_url"].startswith("http") or s["stream_url"].startswith("/")
         assert s["metadata_url"].startswith("http") or s["metadata_url"].startswith("/")
