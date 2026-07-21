@@ -3,97 +3,280 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Stream Radio</title>
+<title>AI STREAM RADIO — Login & Registration</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/CSS/style.css">
+
+
 </head>
 <body>
-  <header>
-    <h1><span class="logo-badge">🐾</span><span id="brandName">AI Stream Radio</span></h1>
-    <div class="station-select-container">
-      <label for="stationSelect">STATION:</label>
-      <select id="stationSelect" aria-label="Select Radio Station">
-        <option value="">Loading stations...</option>
-      </select>
+  <!-- Background Glow & Grid -->
+  <div class="bg-glow orb-cyan"></div>
+  <div class="bg-glow orb-magenta"></div>
+  <div class="cyber-grid-overlay"></div>
+
+  <!-- Command Header -->
+  <header class="synth-header">
+    <div class="header-brand">
+      <h1 class="gradient-brand" id="brandName">AI Streaming Radio</h1>
+    </div>
+
+
+    <nav class="header-nav">
+      <a href="#" class="nav-item active" id="navHome">HOME</a>
+      <a href="#" class="nav-item" id="navLive">LIVE</a>
+      <a href="#" class="nav-item" id="navStations">STATIONS</a>
+      <a href="#" class="nav-item" id="navArchive">ARCHIVE</a>
+      <a href="#" class="nav-item" id="navSettings">SETTINGS</a>
+    </nav>
+
+    <div class="header-profile">
+      <!-- Hidden station select for script compatibility -->
+      <select id="stationSelect" aria-label="Select Radio Station" style="display:none"></select>
+      
+      <div class="user-profile-nav" id="userProfileNav" style="display:none">
+        <img id="navUserAvatar" class="avatar-img" src="" alt="Avatar" style="display:none">
+        <div class="avatar-info">
+          <span class="avatar-label">AVATAR:</span>
+          <span id="navUserName" class="avatar-id">GUEST</span>
+        </div>
+        <button id="logoutBtn" class="logout-btn" type="button">⎋ LOGOUT</button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <div class="art-container">
-      <img class="art" id="coverArt" alt="Album art" crossorigin="anonymous">
-      <div class="visualizer" id="visualizer">
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
-        <div class="bar"></div>
+  <!-- Split-Screen Morva Labs Styled Auth Screen -->
+  <div id="authScreen" class="auth-screen">
+    <div class="morva-auth-layout">
+      
+      <!-- Left Column: Hero Branding Showcase -->
+      <div class="auth-showcase-card">
+        <div class="showcase-badge">⚡ MORVA LABS NEURAL RADIO</div>
+        <h1 class="showcase-title">Experience Live AI Stream Radio</h1>
+        <p class="showcase-description">
+          Connect to high-definition AI broadcasts, automated ICY telemetry, and multi-station frequencies in real time.
+        </p>
+
+        <div class="showcase-floating-metric">
+          <div class="metric-icon">📡</div>
+          <div class="metric-info">
+            <span class="metric-number">142,000+</span>
+            <span class="metric-label">Active Listeners Streamed Daily</span>
+          </div>
+        </div>
+
+        <div class="showcase-features-grid">
+          <div class="showcase-feature">
+            <span class="dot-cyan"></span>
+            <span>Lossless 48kHz HLS Audio Stream</span>
+          </div>
+          <div class="showcase-feature">
+            <span class="dot-magenta"></span>
+            <span>Automated iTunes Cover Art Lookup</span>
+          </div>
+        </div>
       </div>
+
+      <!-- Right Column: Login & Register Form Card -->
+      <div class="auth-form-card">
+        
+        <!-- Header Text -->
+        <div class="form-card-header">
+          <h2 id="authFormTitle">Welcome back</h2>
+          <p id="authFormSubtitle">Please enter your details to sign in to your account</p>
+        </div>
+
+        <!-- Social OAuth Provider Buttons -->
+        <div id="providerList" class="provider-list">
+          <!-- Loaded dynamically -->
+        </div>
+
+        <div class="auth-divider">
+          <span>OR CONTINUE WITH EMAIL</span>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="loginEmail">Email address</label>
+            <input type="email" id="loginEmail" placeholder="Enter your email" required autocomplete="email">
+          </div>
+          
+          <div class="form-group">
+            <div class="label-row">
+              <label for="loginPassword">Password</label>
+              <a href="#" class="forgot-link" onclick="alert('Password reset link sent to email.'); return false;">Forgot password?</a>
+            </div>
+            <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+
+          <div class="form-checkbox-row">
+            <input type="checkbox" id="rememberMe" checked>
+            <label for="rememberMe">Remember me for 30 days</label>
+          </div>
+
+          <div id="loginError" class="auth-error-msg"></div>
+          <button type="submit" class="auth-primary-btn">Sign in to account</button>
+        </form>
+
+        <!-- Register Form (Hidden by default) -->
+        <form id="registerForm" class="auth-form" style="display:none">
+          <div class="form-group">
+            <label for="regFullName">Full name</label>
+            <input type="text" id="regFullName" placeholder="Enter your full name" required autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label for="regEmail">Email address</label>
+            <input type="email" id="regEmail" placeholder="Enter your email" required autocomplete="email">
+          </div>
+          
+          <div class="form-group">
+            <label for="regPassword">Password</label>
+            <input type="password" id="regPassword" placeholder="Minimum 6 characters" required minlength="6" autocomplete="new-password">
+          </div>
+
+          <div id="registerError" class="auth-error-msg"></div>
+          <button type="submit" class="auth-primary-btn glow-magenta">Create free account</button>
+        </form>
+
+        <!-- Form Footer Link -->
+        <div class="auth-form-footer">
+          <span id="authFooterText">Don't have an account?</span>
+          <a href="#" id="authFooterToggleLink">Sign up for free</a>
+        </div>
+
+      </div>
+
     </div>
+  </div>
 
-    <div class="info">
-      <div class="station-meta-row">
-        <span class="station-genre-pill" id="stationGenrePill">GENRE: LIVE BROADCAST</span>
-      </div>
-      <p class="artist" id="artistName">&nbsp;</p>
-      <p class="album" id="albumName">&nbsp;</p>
-      <p class="track" id="trackName">&nbsp;</p>
-      <p class="quality" id="sourceQuality">Source quality: —</p>
-      <p class="quality" id="streamQuality">Stream quality: 48kHz FLAC / HLS Lossless</p>
 
-      <div class="rate">
-        <span>Rate this track:</span>
-        <button id="thumbUp" aria-label="Like">👍 <span id="thumbUpCount">0</span></button>
-        <button id="thumbDown" aria-label="Dislike">👎 <span id="thumbDownCount">0</span></button>
-      </div>
+  <!-- Authenticated Synthwave Console App Container -->
+  <div id="authenticatedApp" class="authenticated-app" style="display:none">
+    <div class="synth-console-grid">
+      
+      <!-- 1. LEFT PANEL: POPULAR STATIONS -->
+      <aside class="popular-stations-panel">
+        <div class="section-title">
+          <h3>POPULAR STATIONS</h3>
+        </div>
+        <div class="stations-cards-column" id="stationCardsList">
+          <p class="loading-text">Loading station grid...</p>
+        </div>
+      </aside>
 
-      <div class="player-bar">
-        <button class="icon-btn" id="playBtn" aria-label="Play/Pause">
-          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-        </button>
-        <span class="time" id="timeDisplay">0:00 / Live</span>
-        <button class="icon-btn" id="muteBtn" aria-label="Mute">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12z"/></svg>
-        </button>
-        <input type="range" id="volumeSlider" min="0" max="100" value="70">
-      </div>
-      <div class="status-line" id="statusMsg"></div>
+      <!-- 2. CENTER PANEL: NOW PLAYING -->
+      <main class="now-playing-panel">
+        <div class="now-playing-header">
+          <span class="now-playing-label">NOW PLAYING:</span>
+          <h2 class="track-title-neon" id="trackName">NEON DRIFT</h2>
+          <h3 class="artist-name-cyan" id="artistName">VECTOR PULSE</h3>
+          <p class="album-name-muted" id="albumName">&nbsp;</p>
+        </div>
+
+        <!-- Central Synthwave Visualizer Display Container -->
+        <div class="visualizer-display-card">
+          <div class="visualizer-grid-landscape">
+            <div class="synth-sun"></div>
+            <div class="vector-landscape-grid"></div>
+          </div>
+
+          
+          <div class="visualizer" id="visualizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+          </div>
+        </div>
+
+        <!-- Progress Time Bar -->
+        <div class="player-progress-container">
+          <span class="time-current" id="timeDisplay">00:00 / Live</span>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <!-- Playback Controls Bar -->
+        <div class="controls-bar">
+          <div class="track-info-tag">
+            <span class="tag-label">TRACK INFO:</span>
+            <span class="tag-value" id="trackInfoTag">VECTOR PULSE</span>
+          </div>
+
+          <div class="control-actions">
+            <button class="btn-ctrl-icon" id="rateUpBtn" title="Like">👍 <span id="thumbUpCount">0</span></button>
+            <button class="btn-ctrl-icon" id="rateDownBtn" title="Dislike">👎 <span id="thumbDownCount">0</span></button>
+            <button class="btn-ctrl-icon" id="prevTrackBtn" title="Previous Track">⏮</button>
+            
+            <button class="btn-play-pause" id="playBtn" aria-label="Play/Pause">
+              <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            </button>
+            
+            <button class="btn-ctrl-icon" id="nextTrackBtn" title="Next Track">⏭</button>
+            <button class="btn-ctrl-icon" id="muteBtn" title="Mute">🔊</button>
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="70">
+          </div>
+        </div>
+
+        <!-- Hidden compat elements for rating JS -->
+        <button id="thumbUp" style="display:none"></button>
+        <button id="thumbDown" style="display:none"></button>
+        <span id="stationGenrePill" style="display:none"></span>
+        <span id="sourceQuality" style="display:none"></span>
+        <span id="streamQuality" style="display:none"></span>
+        <div id="statusMsg" style="display:none"></div>
+      </main>
+
+      <!-- 3. RIGHT SIDEBAR PANEL: UP NEXT & FAVORITE STATIONS -->
+      <aside class="right-sidebar-panel">
+        
+        <div class="sidebar-section">
+          <div class="section-title">
+            <h3>UP NEXT</h3>
+            <span class="dots">•••</span>
+          </div>
+          <ul id="historyList" class="up-next-list">
+            <li class="empty">Nothing played yet this session.</li>
+          </ul>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="section-title">
+            <h3>SONGS YOU DISLIKED</h3>
+          </div>
+          <ul id="dislikedList" class="favorites-list">
+            <li class="empty">You haven't disliked any tracks yet.</li>
+          </ul>
+          <div class="pager" id="dislikedPager" hidden>
+            <button id="dislikedPrevBtn" type="button">&larr; Prev</button>
+            <span id="dislikedPageInfo"></span>
+            <button id="dislikedNextBtn" type="button">Next &rarr;</button>
+          </div>
+        </div>
+
+      </aside>
+
     </div>
-  </main>
-
-  <section class="previous">
-    <div class="previous-inner">
-      <h2>Previous tracks:</h2>
-      <ul id="historyList">
-        <li class="empty">Nothing played yet this session.</li>
-      </ul>
-    </div>
-  </section>
-
-  <section class="previous">
-    <div class="previous-inner">
-      <h2>Songs you disliked:</h2>
-      <ul id="dislikedList">
-        <li class="empty">You haven't disliked any tracks yet.</li>
-      </ul>
-      <div class="pager" id="dislikedPager" hidden>
-        <button id="dislikedPrevBtn" type="button">&larr; Prev</button>
-        <span id="dislikedPageInfo"></span>
-        <button id="dislikedNextBtn" type="button">Next &rarr;</button>
-      </div>
-    </div>
-  </section>
+  </div>
 
   <audio id="audio" preload="none"></audio>
 
@@ -102,6 +285,6 @@
 <script src="/static/Script/player.js"></script>
 <script src="/static/Script/rating.js"></script>
 <script src="/static/Script/disliked.js"></script>
-<script src="/static/Script/main.js"></script>
+<script type="module" src="/static/Script/main.js"></script>
 </body>
 </html>

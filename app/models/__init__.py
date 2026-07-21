@@ -1,8 +1,8 @@
 import importlib
 import sys
 
-from app.database import Base
-from app.models import album, artist, genre, song, song_artist, song_rating, station
+from app.utilities.database import Base
+from app.models import album, artist, auth, genre, song, song_artist, song_rating, station
 
 # If app.database was reloaded (e.g. in test fixtures), Base changed.
 # Reload submodules so all models register on the new Base.metadata.
@@ -21,9 +21,12 @@ if hasattr(genre, "Genre") and genre.Genre.metadata is not Base.metadata:
         importlib.reload(artist)
     if "app.models.album" in sys.modules:
         importlib.reload(album)
+    if "app.models.auth" in sys.modules:
+        importlib.reload(auth)
 
 from app.models.album import Album
 from app.models.artist import Artist
+from app.models.auth import OAuthAccount, User
 from app.models.genre import Genre
 from app.models.song import Song
 from app.models.song_artist import song_artists
@@ -34,8 +37,11 @@ __all__ = [
     "Album",
     "Artist",
     "Genre",
+    "OAuthAccount",
     "Song",
     "SongRating",
     "Station",
+    "User",
     "song_artists",
 ]
+

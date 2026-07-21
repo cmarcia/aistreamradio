@@ -5,13 +5,23 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.config import settings
-from app.database import Base, engine
-from app.logging_config import logger
+from app.Configuration.config import settings
+from app.Configuration.logging_config import logger
+from app.utilities.database import Base, engine
 from app.routers import api_router
 
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)
+
+# Ensure hashed_password column exists on pre-existing SQLite database tables
+with engine.connect() as conn:
+    from sqlalchemy import text
+    try:
+        conn.execute(text("ALTER TABLE users ADD COLUMN hashed_password VARCHAR;"))
+        conn.commit()
+    except Exception:
+        pass
+
 
 app = FastAPI(title=settings.app_name)
 

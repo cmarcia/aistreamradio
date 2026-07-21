@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy import Column, ForeignKey, Integer, Table
 
-from app.database import Base
+from app.utilities.database import Base
 
 song_artists = Table(
     "song_artists",

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app import schemas
-from app.config import settings
+from app.utilities import schemas
+from app.Configuration.config import settings
 from app.repositories.deps import get_song_repository
 from app.repositories.songs import SongRepository
 

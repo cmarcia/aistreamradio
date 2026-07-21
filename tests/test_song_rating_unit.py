@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app import models
-from app.database import Base
+from app.utilities.database import Base
 from app.repositories.songs import SongRepository
 
 

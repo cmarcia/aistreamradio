@@ -3,8 +3,8 @@ from datetime import datetime
 import httpx
 from sqlalchemy.orm import Session
 
-from app import schemas
-from app.logging_config import logger
+from app.utilities import schemas
+from app.Configuration.logging_config import logger
 from app.repositories.albums import AlbumRepository
 from app.repositories.artists import ArtistRepository
 

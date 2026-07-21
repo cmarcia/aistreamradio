@@ -1,5 +1,5 @@
 import pytest
-from app.icy import parse_icy_payload
+from app.utilities.icy import parse_icy_payload
 
 
 def test_parse_icy_payload_artist_and_title():

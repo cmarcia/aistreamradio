@@ -4,7 +4,8 @@ from typing import Sequence
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app import models, schemas
+from app import models
+from app.utilities import schemas
 from app.repositories.artists import ArtistRepository
 
 
