@@ -1,8 +1,7 @@
-import logging
 import re
 import httpx
 
-logger = logging.getLogger("app.icy")
+from app.logging_config import logger
 
 
 def parse_icy_payload(payload: str) -> dict | None:
@@ -37,6 +36,7 @@ def parse_icy_payload(payload: str) -> dict | None:
         if extracted_url.startswith("http://") or extracted_url.startswith("https://"):
             cover_url = extracted_url
 
+    logger.debug(f"Parsed ICY metadata: Artist='{artist}', Title='{song_title}', Cover='{cover_url}'")
     return {
         "artist": artist,
         "title": song_title,
@@ -59,15 +59,18 @@ async def fetch_icy_metadata(stream_url: str, timeout: float = 3.0) -> dict | No
     }
 
     try:
+        logger.debug(f"Initiating ICY metadata probe for stream: {stream_url}")
         async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
             async with client.stream("GET", stream_url, headers=headers) as response:
                 metaint_str = response.headers.get("icy-metaint")
                 if not metaint_str:
+                    logger.debug(f"No icy-metaint header present in response from {stream_url}")
                     return None
 
                 try:
                     metaint = int(metaint_str)
                 except ValueError:
+                    logger.warning(f"Invalid icy-metaint header '{metaint_str}' from {stream_url}")
                     return None
 
                 buffer = bytearray()
@@ -81,12 +84,18 @@ async def fetch_icy_metadata(stream_url: str, timeout: float = 3.0) -> dict | No
                         if meta_len > 0 and len(buffer) >= metaint + 1 + meta_len:
                             raw_bytes = buffer[metaint + 1 : metaint + 1 + meta_len]
                             raw_str = raw_bytes.decode("utf-8", errors="ignore").rstrip("\x00")
-                            return parse_icy_payload(raw_str)
+                            meta = parse_icy_payload(raw_str)
+                            if meta:
+                                logger.info(f"Successfully extracted ICY track metadata from {stream_url}: '{meta.get('artist')} - {meta.get('title')}'")
+                            return meta
                         elif meta_len == 0:
+                            logger.debug(f"ICY metadata block empty (meta_len=0) from {stream_url}")
                             return None
                     if len(buffer) > max_read:
                         break
+    except httpx.TimeoutException:
+        logger.debug(f"ICY probe timed out for stream URL: {stream_url}")
     except Exception as exc:
-        logger.debug(f"ICY probe failed for {stream_url}: {exc}")
+        logger.warning(f"ICY metadata probe exception for {stream_url}: {exc}")
 
     return None
