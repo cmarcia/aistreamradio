@@ -34,6 +34,8 @@ class StationBase(BaseModel):
     bit_depth: int | None = 16
     sample_rate: int | None = 44100
     cover_url: str | None = None
+    primary_color: str | None = "#00f3ff"
+    secondary_color: str | None = "#3b82f6"
 
 
 class StationCreate(StationBase):

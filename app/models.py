@@ -41,6 +41,8 @@ class Station(Base):
     bit_depth: Mapped[int | None] = mapped_column(Integer, nullable=True, default=16)
     sample_rate: Mapped[int | None] = mapped_column(Integer, nullable=True, default=44100)
     cover_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    primary_color: Mapped[str | None] = mapped_column(String, nullable=True, default="#00f3ff")
+    secondary_color: Mapped[str | None] = mapped_column(String, nullable=True, default="#3b82f6")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

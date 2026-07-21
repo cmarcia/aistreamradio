@@ -14,7 +14,9 @@ const stationSelect = document.getElementById("stationSelect");
 
 if (coverArt) {
   coverArt.onerror = () => {
-    coverArt.src = DEFAULT_COVER_URL;
+    if (coverArt.src && !coverArt.src.includes(DEFAULT_COVER_URL)) {
+      coverArt.src = DEFAULT_COVER_URL;
+    }
   };
 }
 
@@ -80,7 +82,7 @@ function applyMetadata(meta) {
     artistName.textContent = meta.artist || "Unknown Artist";
   } else {
     currentTrackKey = null;
-    trackName.textContent = "Track information is not available";
+    trackName.textContent = "No track available";
     artistName.textContent = (meta && meta.artist) || "Live Broadcast";
   }
   lastMeta = meta;
@@ -100,7 +102,7 @@ function applyMetadata(meta) {
     genrePill.textContent = "GENRE: " + (meta.genre || window.currentStationGenre);
   }
 
-  if (hasTrackInfo && meta.cover_url) {
+  if (meta && meta.cover_url) {
     coverArt.src = meta.cover_url + "?t=" + Date.now();
   } else {
     coverArt.src = DEFAULT_COVER_URL;

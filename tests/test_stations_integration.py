@@ -91,3 +91,41 @@ def test_get_station_by_id(client):
 def test_get_station_not_found(client):
     res = client.get("/stations/999")
     assert res.status_code == 404
+
+
+def test_get_station_cover_from_db(client):
+    res = client.post(
+        "/stations",
+        json={
+            "name": "Custom Cyber Station",
+            "frequency": "100.0 FM",
+            "primary_color": "#ff00bb",
+            "secondary_color": "#00ffcc",
+        },
+    )
+    st = res.json()
+
+    cover_res = client.get(f"/stations/{st['id']}/cover")
+    assert cover_res.status_code == 200
+    assert "image/svg+xml" in cover_res.headers["content-type"]
+    assert "Custom Cyber Station" in cover_res.text
+    assert "#ff00bb" in cover_res.text
+    assert "class=\"cover-title\"" in cover_res.text
+    assert "class=\"cover-subtitle\"" in cover_res.text
+
+
+def test_get_station_stream_redirect_from_db(client):
+    res = client.post(
+        "/stations",
+        json={
+            "name": "HLS Streamer",
+            "frequency": "Online",
+            "stream_url": "https://stream.example.com/live.m3u8",
+        },
+    )
+    st = res.json()
+
+    stream_res = client.get(f"/stations/{st['id']}/stream", follow_redirects=False)
+    assert stream_res.status_code == 307
+    assert stream_res.headers["location"] == "https://stream.example.com/live.m3u8"
+
