@@ -66,6 +66,9 @@ async def get_station_stream(
     )
 
 
+from app.logging_config import logger
+
+
 @router.get("/{station_id}/metadata")
 async def get_station_metadata(
     station_id: int, repo: StationRepository = Depends(get_station_repository)
@@ -86,7 +89,8 @@ async def get_station_metadata(
             "cover_url": f"/stations/{station_id}/cover",
         }
 
-    # Attempt live ICY stream metadata probe
+    # 1. Attempt live ICY stream metadata probe
+    has_live_info = False
     if station.stream_url and station.stream_url.startswith("http"):
         live_meta = await fetch_icy_metadata(station.stream_url, timeout=3.0)
         if live_meta and live_meta.get("title"):
@@ -96,6 +100,32 @@ async def get_station_metadata(
                 title=live_meta["title"],
                 cover_url=live_meta.get("cover_url"),
             )
+            has_live_info = True
+
+    # 2. If ICY probe yields no title, check for HTTP JSON metadata feed
+    if not has_live_info and station.metadata_url and station.metadata_url.startswith("http"):
+        try:
+            async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
+                resp = await client.get(station.metadata_url)
+                if resp.status_code == 200:
+                    meta_json = resp.json()
+                    if meta_json.get("title"):
+                        station.current_artist = meta_json.get("artist") or station.name
+                        station.current_title = meta_json.get("title")
+                        station.current_album = meta_json.get("album") or station.current_album
+                        station.has_track_info = True
+                        if meta_json.get("date"):
+                            station.date = str(meta_json.get("date"))
+                        if meta_json.get("bit_depth"):
+                            station.bit_depth = int(meta_json.get("bit_depth"))
+                        if meta_json.get("sample_rate"):
+                            station.sample_rate = int(meta_json.get("sample_rate"))
+                        repo.db.commit()
+                        repo.db.refresh(station)
+                        has_live_info = True
+                        logger.info(f"Fetched HTTP JSON metadata for '{station.name}': '{station.current_artist} - {station.current_title}'")
+        except Exception as exc:
+            logger.warning(f"HTTP JSON metadata probe failed for {station.metadata_url}: {exc}")
 
     genre_name = station.genre.name if station.genre else "Live Music"
     cover_url = station.cover_url or f"/stations/{station.id}/cover"

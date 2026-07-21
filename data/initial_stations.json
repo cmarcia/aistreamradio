@@ -235,7 +235,7 @@
       "frequency": "Online HLS",
       "genre": "Indie / Alternative / Post-Rock",
       "stream_url": "https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8",
-      "metadata_url": "/stations/13/metadata",
+      "metadata_url": "https://d3d4yli4hf5bmh.cloudfront.net/metadata.json",
       "current_artist": "AI Stream Radio",
       "current_title": null,
       "current_album": "Live HLS Broadcast",
