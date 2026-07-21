@@ -6,7 +6,7 @@ from sqlalchemy.pool import StaticPool
 
 from app import models
 from app.database import Base
-from app.main import _get_or_create_song, _rating_summary
+from app.routers.songs import _get_or_create_song, _rating_summary
 
 
 @pytest.fixture()
