@@ -1,33 +1,30 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import Session
 
-from app import models, schemas
-from app.database import get_db
+from app import schemas
+from app.repositories.deps import get_genre_repository
+from app.repositories.genres import GenreRepository
 
 router = APIRouter(prefix="/genres", tags=["genres"])
 
 
 @router.get("", response_model=list[schemas.Genre])
-def list_genres(db: Session = Depends(get_db)):
-    return db.scalars(select(models.Genre)).all()
+def list_genres(repo: GenreRepository = Depends(get_genre_repository)):
+    return repo.get_all()
 
 
 @router.post("", response_model=schemas.Genre, status_code=201)
-def create_genre(payload: schemas.GenreCreate, db: Session = Depends(get_db)):
-    existing = db.scalar(select(models.Genre).where(models.Genre.name == payload.name))
+def create_genre(
+    payload: schemas.GenreCreate, repo: GenreRepository = Depends(get_genre_repository)
+):
+    existing = repo.get_by_name(payload.name)
     if existing:
         raise HTTPException(status_code=409, detail="Genre already exists")
-    genre = models.Genre(**payload.model_dump())
-    db.add(genre)
-    db.commit()
-    db.refresh(genre)
-    return genre
+    return repo.create(payload)
 
 
 @router.get("/{genre_id}", response_model=schemas.Genre)
-def get_genre(genre_id: int, db: Session = Depends(get_db)):
-    genre = db.get(models.Genre, genre_id)
+def get_genre(genre_id: int, repo: GenreRepository = Depends(get_genre_repository)):
+    genre = repo.get_by_id(genre_id)
     if genre is None:
         raise HTTPException(status_code=404, detail="Genre not found")
     return genre

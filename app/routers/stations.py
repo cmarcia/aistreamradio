@@ -1,89 +1,47 @@
-import json
 from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
-from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
 
-from app import models, schemas
+from app import schemas
 from app.config import settings
-from app.database import get_db
 from app.icy import fetch_icy_metadata
+from app.repositories.deps import get_station_repository
+from app.repositories.stations import StationRepository
 
 router = APIRouter(prefix="/stations", tags=["stations"])
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 COVER_TEMPLATE_PATH = STATIC_DIR / "Images" / "station-cover-template.svg"
-INITIAL_STATIONS_PATH = Path(__file__).parent.parent.parent / "data" / "initial_stations.json"
-
-
-def _seed_initial_data(db: Session):
-    if not INITIAL_STATIONS_PATH.exists():
-        return
-
-    data = json.loads(INITIAL_STATIONS_PATH.read_text(encoding="utf-8"))
-    genres_map = {}
-
-    for g_data in data.get("genres", []):
-        name = g_data["name"]
-        g = db.scalar(select(models.Genre).where(models.Genre.name == name))
-        if not g:
-            g = models.Genre(name=name, description=g_data.get("description"))
-            db.add(g)
-            db.flush()
-        genres_map[name] = g.id
-
-    stations_to_add = []
-    for idx, st_data in enumerate(data.get("stations", []), start=1):
-        st = dict(st_data)
-        genre_name = st.pop("genre", None)
-        genre_id = genres_map.get(genre_name) if genre_name else None
-
-        if "metadata_url" not in st or not st["metadata_url"]:
-            st["metadata_url"] = f"/stations/{idx}/metadata"
-
-        station = models.Station(genre_id=genre_id, **st)
-        stations_to_add.append(station)
-
-    if stations_to_add:
-        db.add_all(stations_to_add)
-        db.commit()
 
 
 @router.get("", response_model=list[schemas.Station])
-def list_stations(db: Session = Depends(get_db)):
-    stations = db.scalars(select(models.Station).options(joinedload(models.Station.genre))).all()
-    if not stations:
-        _seed_initial_data(db)
-        stations = db.scalars(select(models.Station).options(joinedload(models.Station.genre))).all()
-    return stations
+def list_stations(repo: StationRepository = Depends(get_station_repository)):
+    return repo.get_all()
 
 
 @router.post("", response_model=schemas.Station, status_code=201)
-def create_station(payload: schemas.StationCreate, db: Session = Depends(get_db)):
-    station = models.Station(**payload.model_dump())
-    db.add(station)
-    db.commit()
-    db.refresh(station)
-    return station
+def create_station(
+    payload: schemas.StationCreate, repo: StationRepository = Depends(get_station_repository)
+):
+    return repo.create(payload)
 
 
 @router.get("/{station_id}", response_model=schemas.Station)
-def get_station(station_id: int, db: Session = Depends(get_db)):
-    station = db.scalar(
-        select(models.Station).where(models.Station.id == station_id).options(joinedload(models.Station.genre))
-    )
+def get_station(station_id: int, repo: StationRepository = Depends(get_station_repository)):
+    station = repo.get_by_id(station_id)
     if station is None:
         raise HTTPException(status_code=404, detail="Station not found")
     return station
 
 
 @router.get("/{station_id}/stream")
-async def get_station_stream(station_id: int, db: Session = Depends(get_db)):
-    station = db.get(models.Station, station_id)
+async def get_station_stream(
+    station_id: int, repo: StationRepository = Depends(get_station_repository)
+):
+    station = repo.get_by_id(station_id)
     if station is None or not station.stream_url:
         raise HTTPException(status_code=404, detail="Station or stream URL not found")
 
@@ -109,11 +67,12 @@ async def get_station_stream(station_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{station_id}/metadata")
-async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
+async def get_station_metadata(
+    station_id: int, repo: StationRepository = Depends(get_station_repository)
+):
     current_year = str(datetime.now(timezone.utc).year)
-    station = db.scalar(
-        select(models.Station).where(models.Station.id == station_id).options(joinedload(models.Station.genre))
-    )
+    station = repo.get_by_id(station_id)
+
     if station is None:
         return {
             "artist": f"Station {station_id}",
@@ -131,12 +90,12 @@ async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
     if station.stream_url and station.stream_url.startswith("http"):
         live_meta = await fetch_icy_metadata(station.stream_url, timeout=3.0)
         if live_meta and live_meta.get("title"):
-            station.current_artist = live_meta["artist"] or station.name
-            station.current_title = live_meta["title"]
-            station.has_track_info = True
-            if live_meta.get("cover_url"):
-                station.cover_url = live_meta["cover_url"]
-            db.commit()
+            station = repo.update_live_metadata(
+                station=station,
+                artist=live_meta["artist"],
+                title=live_meta["title"],
+                cover_url=live_meta.get("cover_url"),
+            )
 
     genre_name = station.genre.name if station.genre else "Live Music"
     cover_url = station.cover_url or f"/stations/{station.id}/cover"
@@ -155,10 +114,10 @@ async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{station_id}/cover")
-def get_station_cover(station_id: int, db: Session = Depends(get_db)):
-    station = db.scalar(
-        select(models.Station).where(models.Station.id == station_id).options(joinedload(models.Station.genre))
-    )
+def get_station_cover(
+    station_id: int, repo: StationRepository = Depends(get_station_repository)
+):
+    station = repo.get_by_id(station_id)
     if station is None:
         bg1 = settings.default_primary_color
         bg2 = settings.default_secondary_color
