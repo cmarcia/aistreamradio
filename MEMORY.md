@@ -15,6 +15,7 @@ This memory file contains comprehensive knowledge of **AI Stream Radio** ("The S
 - **Paginated Disliked Songs List:** Paginated list API and UI tab showing listener's disliked song history.
 - **Clickable Station Navigation:** Clicking any station name in the "Previous tracks" or "Songs you disliked" list cards tunes into that station, starts playback immediately, and updates the header station dropdown with a `✓` checkmark indicator.
 - **Cyberpunk / Dark Sci-Fi HUD Design:** Futuristic UI with glassmorphism, animated signal visualizer, glowing indicators, and smooth state transitions.
+- **Strict Data Decoupling Rule:** Zero hardcoded station lists, dictionaries, or SVG string blocks in Python source files (`app/main.py`). All initial station datasets, genres, SVG cover templates, and default colors MUST be loaded from external data/config files (`data/initial_stations.json`, `app/static/Images/station-cover-template.svg`, `app/config.py`).
 
 ---
 

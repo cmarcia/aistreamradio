@@ -1,0 +1,246 @@
+{
+  "genres": [
+    {
+      "name": "Pop / Mainstream Hits",
+      "description": "Popular music charts and top radio hits"
+    },
+    {
+      "name": "News / Talk / Pop Music",
+      "description": "News broadcasts, talk radio, and music"
+    },
+    {
+      "name": "Indie / Alternative / Post-Rock",
+      "description": "Independent, alternative, and experimental music"
+    },
+    {
+      "name": "Hebrew Pop / Mizrahi / Middle Eastern",
+      "description": "Mizrahi, Hebrew pop, and regional music"
+    },
+    {
+      "name": "Hasidic / Cantorial / Talk",
+      "description": "Hasidic songs, cantorial music, and talk"
+    },
+    {
+      "name": "Heavy Metal / Thrash / Hard Rock",
+      "description": "Heavy metal, thrash, and hard rock music"
+    },
+    {
+      "name": "Classic Rock / 70s & 80s Rock",
+      "description": "Classic rock, 70s anthems, and 80s rock hits"
+    },
+    {
+      "name": "Classical Music",
+      "description": "Classical, symphonic, orchestral, and opera music"
+    },
+    {
+      "name": "Jazz / NuJazz / Bebop",
+      "description": "Classic jazz, avant-garde, bebop, and lounge music"
+    }
+  ],
+  "stations": [
+    {
+      "name": "Galglatz (גלגלצ)",
+      "frequency": "91.8 FM",
+      "genre": "Pop / Mainstream Hits",
+      "stream_url": "https://glzwizzlv.bynetcdn.com/glglz_mp3",
+      "metadata_url": "/stations/1/metadata",
+      "current_artist": "Galglatz (גלגלצ)",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#00f3ff",
+      "secondary_color": "#3b82f6",
+      "cover_url": null
+    },
+    {
+      "name": "Galei Tzahal (גלי צה\"ל)",
+      "frequency": "104.0 FM",
+      "genre": "News / Talk / Pop Music",
+      "stream_url": "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz",
+      "metadata_url": "/stations/2/metadata",
+      "current_artist": "Galei Tzahal (גלי צה\"ל)",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#10b981",
+      "secondary_color": "#047857",
+      "cover_url": null
+    },
+    {
+      "name": "Hakatze / The Edge (הקצה)",
+      "frequency": "Online",
+      "genre": "Indie / Alternative / Post-Rock",
+      "stream_url": "http://kzradio.mediacast.co.il/kzradio_live/kzradio/icecast.audio",
+      "metadata_url": "/stations/3/metadata",
+      "current_artist": "Hakatze Radio (הקצה)",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 24,
+      "sample_rate": 48000,
+      "primary_color": "#ff007f",
+      "secondary_color": "#9d4edd",
+      "cover_url": null
+    },
+    {
+      "name": "Galei Israel (גלי ישראל)",
+      "frequency": "94.0 FM",
+      "genre": "Hebrew Pop / Mizrahi / Middle Eastern",
+      "stream_url": "https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio",
+      "metadata_url": "/stations/4/metadata",
+      "current_artist": "Galei Israel (גלי ישראל)",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#ff9e00",
+      "secondary_color": "#d97706",
+      "cover_url": null
+    },
+    {
+      "name": "Kol Chai (קול חי)",
+      "frequency": "93.0 FM",
+      "genre": "Hasidic / Cantorial / Talk",
+      "stream_url": "https://media2.93fm.co.il/live-new",
+      "metadata_url": "/stations/5/metadata",
+      "current_artist": "Kol Chai (קול חי)",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#8b5cf6",
+      "secondary_color": "#4c1d95",
+      "cover_url": null
+    },
+    {
+      "name": "Metal Detector",
+      "frequency": "Online",
+      "genre": "Heavy Metal / Thrash / Hard Rock",
+      "stream_url": "https://ice1.somafm.com/metal-128-mp3",
+      "metadata_url": "/stations/6/metadata",
+      "current_artist": "Metal Detector",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 24,
+      "sample_rate": 48000,
+      "primary_color": "#ff0033",
+      "secondary_color": "#800000",
+      "cover_url": null
+    },
+    {
+      "name": "Classic Rock Vault",
+      "frequency": "Online",
+      "genre": "Classic Rock / 70s & 80s Rock",
+      "stream_url": "https://ice1.somafm.com/defcon-128-mp3",
+      "metadata_url": "/stations/7/metadata",
+      "current_artist": "Classic Rock Vault",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#ffaa00",
+      "secondary_color": "#7a4d00",
+      "cover_url": null
+    },
+    {
+      "name": "WQXR 105.9 FM Classical",
+      "frequency": "105.9 FM",
+      "genre": "Classical Music",
+      "stream_url": "https://stream.wqxr.org/wqxr",
+      "metadata_url": "/stations/8/metadata",
+      "current_artist": "WQXR 105.9 FM Classical",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 24,
+      "sample_rate": 48000,
+      "primary_color": "#00c8ff",
+      "secondary_color": "#4f46e5",
+      "cover_url": null
+    },
+    {
+      "name": "Klassik Radio Symphony",
+      "frequency": "Online",
+      "genre": "Classical Music",
+      "stream_url": "https://klassik-high.rautemusik.fm/?ref=radiobrowser",
+      "metadata_url": "/stations/9/metadata",
+      "current_artist": "Klassik Radio Symphony",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#eab308",
+      "secondary_color": "#854d0e",
+      "cover_url": null
+    },
+    {
+      "name": "Sonic Universe NuJazz",
+      "frequency": "Online",
+      "genre": "Jazz / NuJazz / Bebop",
+      "stream_url": "https://ice1.somafm.com/sonicuniverse-128-mp3",
+      "metadata_url": "/stations/10/metadata",
+      "current_artist": "Sonic Universe NuJazz",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 24,
+      "sample_rate": 48000,
+      "primary_color": "#9333ea",
+      "secondary_color": "#4c1d95",
+      "cover_url": null
+    },
+    {
+      "name": "Radio Swiss Jazz",
+      "frequency": "Online",
+      "genre": "Jazz / NuJazz / Bebop",
+      "stream_url": "http://stream.srg-ssr.ch/m/rsj/mp3_128",
+      "metadata_url": "/stations/11/metadata",
+      "current_artist": "Radio Swiss Jazz",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#06b6d4",
+      "secondary_color": "#0e7490",
+      "cover_url": null
+    },
+    {
+      "name": "Secret Agent Jazz & Lounge",
+      "frequency": "Online",
+      "genre": "Jazz / NuJazz / Bebop",
+      "stream_url": "https://ice1.somafm.com/secretagent-128-mp3",
+      "metadata_url": "/stations/12/metadata",
+      "current_artist": "Secret Agent Jazz",
+      "current_title": null,
+      "current_album": "Live Broadcast",
+      "has_track_info": false,
+      "date": "2026",
+      "bit_depth": 16,
+      "sample_rate": 44100,
+      "primary_color": "#f59e0b",
+      "secondary_color": "#b45309",
+      "cover_url": null
+    }
+  ]
+}
