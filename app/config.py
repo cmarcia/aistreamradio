@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/radiostation.db"
     app_name: str = "AI Stream Radio API"
     disliked_songs_page_size: int = 5
+    default_primary_color: str = "#00f3ff"
+    default_secondary_color: str = "#3b82f6"
 
 
 settings = Settings()

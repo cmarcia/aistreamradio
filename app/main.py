@@ -129,60 +129,29 @@ async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
     }
 
 
+COVER_TEMPLATE_PATH = STATIC_DIR / "Images" / "station-cover-template.svg"
+
+
 @app.get("/stations/{station_id}/cover")
 def get_station_cover(station_id: int, db: Session = Depends(get_db)):
     station = db.scalar(
         select(models.Station).where(models.Station.id == station_id).options(joinedload(models.Station.genre))
     )
     if station is None:
-        bg1 = "#00f3ff"
-        bg2 = "#3b82f6"
+        bg1 = settings.default_primary_color
+        bg2 = settings.default_secondary_color
         title = f"STATION {station_id}"
         subtitle = "RADIO STREAM"
     else:
-        bg1 = station.primary_color or "#00f3ff"
-        bg2 = station.secondary_color or "#3b82f6"
+        bg1 = station.primary_color or settings.default_primary_color
+        bg2 = station.secondary_color or settings.default_secondary_color
         title = station.name
         genre_name = station.genre.name if station.genre else ""
         subtitle = f"{station.frequency} • {genre_name}".strip(" •")
 
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500">
-      <defs>
-        <style>
-          .cover-title {{
-            font-family: inherit, sans-serif;
-            font-size: 24px;
-            font-weight: bold;
-            fill: #ffffff;
-            text-anchor: middle;
-            letter-spacing: 2px;
-          }}
-          .cover-subtitle {{
-            font-family: inherit, sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            fill: {bg1};
-            text-anchor: middle;
-            letter-spacing: 1px;
-          }}
-        </style>
-        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="{bg1}" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="{bg2}" stop-opacity="0.95"/>
-        </linearGradient>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-        </pattern>
-      </defs>
-      <rect width="500" height="500" fill="#080b14"/>
-      <rect width="500" height="500" fill="url(#g)"/>
-      <rect width="500" height="500" fill="url(#grid)"/>
-      <circle cx="250" cy="220" r="120" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
-      <circle cx="250" cy="220" r="80" fill="none" stroke="{bg1}" stroke-width="4"/>
-      <polygon points="230,190 280,220 230,250" fill="#ffffff"/>
-      <text x="250" y="380" class="cover-title">{title}</text>
-      <text x="250" y="420" class="cover-subtitle">{subtitle}</text>
-    </svg>"""
+    template = COVER_TEMPLATE_PATH.read_text(encoding="utf-8")
+    svg = template.format(bg1=bg1, bg2=bg2, title=title, subtitle=subtitle)
+
     return Response(
         content=svg,
         media_type="image/svg+xml",
