@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -51,6 +51,31 @@ def create_station(
     payload: schemas.StationCreate, repo: StationRepository = Depends(get_station_repository)
 ):
     return repo.create(payload)
+
+
+@router.get("/cover-proxy")
+async def cover_proxy(url: str = Query(...)):
+    if not url.startswith("http://") and not url.startswith("https://"):
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+
+    try:
+        async with httpx.AsyncClient(timeout=8.0, follow_redirects=True) as client:
+            resp = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
+            if resp.status_code != 200:
+                raise HTTPException(status_code=404, detail="Cover image not found")
+
+            media_type = resp.headers.get("content-type", "image/jpeg")
+            return Response(
+                content=resp.content,
+                media_type=media_type,
+                headers={
+                    "Access-Control-Allow-Origin": "*",
+                    "Cache-Control": "public, max-age=86400",
+                },
+            )
+    except Exception as exc:
+        logger.warning(f"Error proxying cover image URL '{url}': {exc}")
+        raise HTTPException(status_code=502, detail="Failed to fetch remote cover image")
 
 
 @router.get("/{station_id}", response_model=schemas.Station)
@@ -164,10 +189,16 @@ async def get_station_metadata(
             station.cover_url = art_url
             repo.db.commit()
             repo.db.refresh(station)
-            logger.info(f"Dynamically retrieved album cover art for '{station.current_artist} - {station.current_title}': {art_url}")
+            logger.info(
+                f"Dynamically retrieved album cover art for '{station.current_artist} - {station.current_title}': {art_url}"
+            )
 
     genre_name = station.genre.name if station.genre else "Live Music"
-    cover_url = station.cover_url or f"/stations/{station.id}/cover"
+    raw_cover_url = station.cover_url or f"/stations/{station.id}/cover"
+    if raw_cover_url.startswith("http://") or raw_cover_url.startswith("https://"):
+        cover_url = f"/stations/cover-proxy?url={urllib.parse.quote(raw_cover_url)}"
+    else:
+        cover_url = raw_cover_url
 
     return {
         "artist": station.current_artist or station.name,
