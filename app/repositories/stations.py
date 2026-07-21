@@ -46,11 +46,14 @@ class StationRepository:
         self, station: models.Station, artist: str, title: str, cover_url: str | None = None
     ) -> models.Station:
         logger.info(f"Updating station '{station.name}' (ID={station.id}) live metadata -> '{artist} - {title}'")
+        if station.current_title != title or station.current_artist != artist:
+            station.cover_url = cover_url
+        elif cover_url:
+            station.cover_url = cover_url
+
         station.current_artist = artist or station.name
         station.current_title = title
         station.has_track_info = True
-        if cover_url:
-            station.cover_url = cover_url
         self.db.commit()
         self.db.refresh(station)
         return station

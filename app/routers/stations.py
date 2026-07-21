@@ -155,9 +155,14 @@ async def get_station_metadata(
                 resp = await client.get(station.metadata_url)
                 if resp.status_code == 200:
                     meta_json = resp.json()
-                    if meta_json.get("title"):
-                        station.current_artist = meta_json.get("artist") or station.name
-                        station.current_title = meta_json.get("title")
+                    new_title = meta_json.get("title")
+                    new_artist = meta_json.get("artist") or station.name
+                    if new_title:
+                        if station.current_title != new_title or station.current_artist != new_artist:
+                            station.cover_url = meta_json.get("cover_url")
+
+                        station.current_artist = new_artist
+                        station.current_title = new_title
                         station.current_album = meta_json.get("album") or station.current_album
                         station.has_track_info = True
                         if meta_json.get("date"):
