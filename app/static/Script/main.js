@@ -27,6 +27,7 @@ if (coverArt) {
 
 let currentStation = null;
 let currentTrackKey = null;
+let currentTrackCoverUrl = null;
 let lastMeta = null;
 let history = [];
 let stationsList = [];
@@ -56,17 +57,47 @@ function renderHistory() {
   );
 }
 
+async function fetchTrackCoverArt(artist, title, album) {
+  if (!artist || !title) return;
+
+  const activeTrackKey = currentTrackKey;
+  const params = new URLSearchParams({ artist, title });
+  if (album) params.append("album", album);
+
+  const data = await apiFetchOrWarn(`/itunes/search?${params.toString()}`, {}, "Cover art lookup failed");
+  if (!data) return;
+
+  // Race condition guard: ensure track has not changed while request was in-flight
+  if (currentTrackKey !== activeTrackKey) return;
+
+  if (data.cover_url) {
+    currentTrackCoverUrl = data.cover_url;
+    if (coverArt) {
+      coverArt.src = data.cover_url;
+    }
+  }
+  if (data.album_name && albumName) {
+    let yearStr = data.release_year ? ` (${data.release_year})` : "";
+    albumName.textContent = `${data.album_name}${yearStr}`;
+  }
+}
+
 function applyMetadata(meta) {
   if (meta && currentStation) {
     meta._station_id = currentStation.id;
   }
   const hasTrackInfo = Boolean(meta && meta.has_track_info !== false && meta.title);
 
+  let isNewTrack = false;
   if (hasTrackInfo) {
     const key = (meta.artist || "") + " — " + meta.title;
+    if (key !== currentTrackKey) {
+      isNewTrack = true;
+      currentTrackCoverUrl = null;
+    }
     if (
       currentTrackKey !== null &&
-      key !== currentTrackKey &&
+      isNewTrack &&
       lastMeta &&
       lastMeta.has_track_info !== false &&
       lastMeta.title
@@ -87,6 +118,7 @@ function applyMetadata(meta) {
     artistName.textContent = meta.artist || "Unknown Artist";
   } else {
     currentTrackKey = null;
+    currentTrackCoverUrl = null;
     trackName.textContent = "No track available";
     artistName.textContent = (meta && meta.artist) || "Live Broadcast";
   }
@@ -108,13 +140,20 @@ function applyMetadata(meta) {
   }
 
   if (meta && meta.cover_url) {
-    coverArt.src = meta.cover_url.startsWith("http")
+    currentTrackCoverUrl = meta.cover_url.startsWith("http")
       ? meta.cover_url
       : meta.cover_url + "?t=" + Date.now();
+    coverArt.src = currentTrackCoverUrl;
+  } else if (currentTrackCoverUrl) {
+    coverArt.src = currentTrackCoverUrl;
   } else if (currentStation) {
     coverArt.src = `/stations/${currentStation.id}/cover?t=` + Date.now();
   } else {
     coverArt.src = DEFAULT_COVER_URL;
+  }
+
+  if (hasTrackInfo && isNewTrack) {
+    fetchTrackCoverArt(meta.artist, meta.title, meta.album);
   }
 
   onTrackChanged({
@@ -133,7 +172,10 @@ async function pollMetadata() {
 function selectStation(st, autoPlay = false) {
   if (!st) return;
   currentStation = st;
+  currentTrackKey = null;
+  currentTrackCoverUrl = null;
   updateStationSelectOptions(st.id);
+
 
   const brandName = document.getElementById("brandName");
   const streamQuality = document.getElementById("streamQuality");

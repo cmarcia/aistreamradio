@@ -113,3 +113,30 @@ def test_duplicate_rating_violates_db_unique_constraint(db_session):
     db_session.add(models.SongRating(song_id=song.id, listener_id="u1", rating="down"))
     with pytest.raises(IntegrityError):
         db_session.commit()
+
+
+def test_song_artists_many_to_many_relationship(db_session):
+    repo = SongRepository(db_session)
+
+    # 1. Verify get_or_create creates Artist record in 'artists' table
+    song1 = repo.get_or_create("Daft Punk", "Around the World")
+    assert len(song1.artists) == 1
+    assert song1.artists[0].name == "Daft Punk"
+    assert song1.artist == "Daft Punk"
+
+    # 2. Verify Artist record links back to songs
+    daft_punk = db_session.query(models.Artist).filter(models.Artist.name == "Daft Punk").first()
+    assert daft_punk is not None
+    assert len(daft_punk.songs) == 1
+    assert daft_punk.songs[0].title == "Around the World"
+
+    # 3. Add a second song for the same artist
+    song2 = repo.get_or_create("Daft Punk", "One More Time")
+    assert song2.artists[0].id == daft_punk.id
+    db_session.refresh(daft_punk)
+    assert len(daft_punk.songs) == 2
+
+    # 4. Verify artist count in artists table
+    artist_count = db_session.query(models.Artist).count()
+    assert artist_count == 1
+

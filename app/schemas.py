@@ -133,4 +133,6 @@ class ITunesSearchResult(BaseModel):
     genre: str | None = None
     artist_id: int | None = None
     album_id: int | None = None
+    cached: bool = False
+
 

@@ -115,6 +115,61 @@ async def get_station_stream(
     )
 
 
+def parse_external_station_metadata(data: dict) -> dict | None:
+    if not isinstance(data, dict):
+        return None
+
+    if data.get("title"):
+        return {
+            "artist": data.get("artist"),
+            "title": data.get("title"),
+            "album": data.get("album"),
+            "cover_url": data.get("cover_url") or data.get("albumArt"),
+            "date": data.get("date"),
+        }
+
+    songs = data.get("songs")
+    if isinstance(songs, list) and len(songs) > 0 and isinstance(songs[0], dict):
+        s = songs[0]
+        if s.get("title"):
+            return {
+                "artist": s.get("artist"),
+                "title": s.get("title"),
+                "album": s.get("album"),
+                "cover_url": s.get("albumArt"),
+                "date": s.get("date"),
+            }
+
+    item = data.get("current_playlist_item")
+    if isinstance(item, dict):
+        cat = item.get("catalog_entry") if isinstance(item.get("catalog_entry"), dict) else {}
+        comp = cat.get("composer") if isinstance(cat.get("composer"), dict) else {}
+        title = cat.get("title") or item.get("title")
+        artist = comp.get("name") or cat.get("artist")
+        if title:
+            return {
+                "artist": artist,
+                "title": title,
+                "album": cat.get("album"),
+                "cover_url": cat.get("artwork_url"),
+                "date": None,
+            }
+
+    show = data.get("current_show")
+    if isinstance(show, dict) and show.get("title"):
+        img = show.get("fullImage")
+        cover_url = img.get("url") if isinstance(img, dict) else None
+        return {
+            "artist": show.get("title"),
+            "title": "Live Broadcast",
+            "album": "Radio Broadcast",
+            "cover_url": cover_url,
+            "date": None,
+        }
+
+    return None
+
+
 @router.get("/{station_id}/metadata")
 async def get_station_metadata(
     station_id: int, repo: StationRepository = Depends(get_station_repository)
@@ -152,27 +207,23 @@ async def get_station_metadata(
     if not has_live_info and station.metadata_url and station.metadata_url.startswith("http"):
         try:
             async with httpx.AsyncClient(timeout=3.0, follow_redirects=True) as client:
-                resp = await client.get(station.metadata_url)
+                resp = await client.get(station.metadata_url, headers={"User-Agent": "Mozilla/5.0"})
                 if resp.status_code == 200:
-                    meta_json = resp.json()
-                    new_title = meta_json.get("title")
-                    new_artist = meta_json.get("artist") or station.name
-                    if new_title:
+                    parsed = parse_external_station_metadata(resp.json())
+                    if parsed and parsed.get("title"):
+                        new_title = parsed["title"]
+                        new_artist = parsed.get("artist") or station.name
                         if station.current_title != new_title or station.current_artist != new_artist:
-                            station.cover_url = meta_json.get("cover_url")
+                            station.cover_url = parsed.get("cover_url")
 
                         station.current_artist = new_artist
                         station.current_title = new_title
-                        station.current_album = meta_json.get("album") or station.current_album
+                        station.current_album = parsed.get("album") or station.current_album
                         station.has_track_info = True
-                        if meta_json.get("date"):
-                            station.date = str(meta_json.get("date"))
-                        if meta_json.get("bit_depth"):
-                            station.bit_depth = int(meta_json.get("bit_depth"))
-                        if meta_json.get("sample_rate"):
-                            station.sample_rate = int(meta_json.get("sample_rate"))
-                        if meta_json.get("cover_url"):
-                            station.cover_url = meta_json.get("cover_url")
+                        if parsed.get("date"):
+                            station.date = str(parsed.get("date"))
+                        if parsed.get("cover_url"):
+                            station.cover_url = parsed.get("cover_url")
                         repo.db.commit()
                         repo.db.refresh(station)
                         has_live_info = True
@@ -181,6 +232,7 @@ async def get_station_metadata(
                         )
         except Exception as exc:
             logger.warning(f"HTTP JSON metadata probe failed for {station.metadata_url}: {exc}")
+
 
     # 3. If track info exists but cover_url is missing, fetch album artwork dynamically
     if (

@@ -14,6 +14,7 @@ This memory file contains comprehensive knowledge of **AI Stream Radio** ("The S
 - **Persistent Dislikes & Cover Snapshots:** Disliked tracks are saved with a timestamp and a base64 snapshot of the cover art captured via `<canvas>` at the moment of voting.
 - **Paginated Disliked Songs List:** Paginated list API and UI tab showing listener's disliked song history.
 - **Clickable Station Navigation:** Clicking any station name in the "Previous tracks" or "Songs you disliked" list cards tunes into that station, starts playback immediately, and updates the header station dropdown with a `✓` checkmark indicator.
+- **Auto Album Metadata & Cover Art Lookup:** Automatically queries local database cache first, and falls back to iTunes API on cache miss to retrieve high-resolution album artwork and metadata whenever a new track plays, persisting results for future instant cache hits.
 - **Cyberpunk / Dark Sci-Fi HUD Design:** Futuristic UI with glassmorphism, animated signal visualizer, glowing indicators, and smooth state transitions.
 - **Strict Data Decoupling Rule:** Zero hardcoded station lists, dictionaries, or SVG string blocks in Python source files (`app/main.py`). All initial station datasets, genres, SVG cover templates, and default colors MUST be loaded from external data/config files (`data/initial_stations.json`, `app/static/Images/station-cover-template.svg`, `app/config.py`).
 
@@ -129,10 +130,14 @@ aistreamradio/
 
 ### `songs` Table (`app/models.py`)
 - `id`: `Integer` (Primary Key, Indexed)
-- `artist`: `String` (Not Null)
 - `title`: `String` (Not Null)
 - `cover_image`: `Text` (Nullable, Base64 data URL captured when rated)
-- **Constraint:** `UniqueConstraint("artist", "title", name="uq_song_artist_title")`
+- **Relationship:** `artists` -> `list[Artist]` (Many-to-Many linked via `song_artists` association table)
+- **Property:** `.artist` -> `String` (Returns comma-separated names of linked artists)
+
+### `song_artists` Association Table (`app/models.py`)
+- `song_id`: `Integer` (ForeignKey `songs.id`, Primary Key)
+- `artist_id`: `Integer` (ForeignKey `artists.id`, Primary Key)
 
 ### `song_ratings` Table (`app/models.py`)
 - `id`: `Integer` (Primary Key, Indexed)
@@ -147,6 +152,7 @@ aistreamradio/
 - `name`: `String` (Not Null, Unique, Indexed)
 - `created_at`: `DateTime(timezone=True)` (Default: UTC now)
 - **Relationship:** `albums` -> `list[Album]` (One-to-Many back-populated by `Album.artist`)
+- **Relationship:** `songs` -> `list[Song]` (Many-to-Many back-populated by `Song.artists`)
 
 ### `albums` Table (`app/models.py`)
 - `id`: `Integer` (Primary Key, Indexed)
@@ -156,6 +162,7 @@ aistreamradio/
 - `release_year`: `Integer` (Nullable, album release year)
 - `created_at`: `DateTime(timezone=True)` (Default: UTC now)
 - **Relationship:** `artist` -> `Artist` (Many-to-One linked via `artist_id`)
+
 
 ---
 
