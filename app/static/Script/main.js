@@ -14,7 +14,12 @@ const stationSelect = document.getElementById("stationSelect");
 
 if (coverArt) {
   coverArt.onerror = () => {
-    if (coverArt.src && !coverArt.src.includes(DEFAULT_COVER_URL)) {
+    if (currentStation) {
+      const stationFallback = `/stations/${currentStation.id}/cover`;
+      if (coverArt.src && !coverArt.src.includes(stationFallback)) {
+        coverArt.src = stationFallback;
+      }
+    } else if (coverArt.src && !coverArt.src.includes(DEFAULT_COVER_URL)) {
       coverArt.src = DEFAULT_COVER_URL;
     }
   };
@@ -103,7 +108,11 @@ function applyMetadata(meta) {
   }
 
   if (meta && meta.cover_url) {
-    coverArt.src = meta.cover_url + "?t=" + Date.now();
+    coverArt.src = meta.cover_url.startsWith("http")
+      ? meta.cover_url
+      : meta.cover_url + "?t=" + Date.now();
+  } else if (currentStation) {
+    coverArt.src = `/stations/${currentStation.id}/cover?t=` + Date.now();
   } else {
     coverArt.src = DEFAULT_COVER_URL;
   }

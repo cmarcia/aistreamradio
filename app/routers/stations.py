@@ -1,13 +1,18 @@
+import json
+import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import RedirectResponse, StreamingResponse
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 
 from app import schemas
 from app.config import settings
 from app.icy import fetch_icy_metadata
+from app.logging_config import logger
 from app.repositories.deps import get_station_repository
 from app.repositories.stations import StationRepository
 
@@ -15,6 +20,25 @@ router = APIRouter(prefix="/stations", tags=["stations"])
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 COVER_TEMPLATE_PATH = STATIC_DIR / "Images" / "station-cover-template.svg"
+
+
+async def fetch_itunes_cover_art(artist: str, title: str, timeout: float = 2.5) -> str | None:
+    if not artist or not title:
+        return None
+    clean_title = title.split("(")[0].strip()
+    query = f"{artist} {clean_title}"
+    url = f"https://itunes.apple.com/search?term={urllib.parse.quote(query)}&entity=song&limit=1"
+    try:
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+            resp = await client.get(url)
+            if resp.status_code == 200:
+                data = resp.json()
+                results = data.get("results", [])
+                if results and "artworkUrl100" in results[0]:
+                    return results[0]["artworkUrl100"].replace("100x100bb", "600x600bb")
+    except Exception as exc:
+        logger.debug(f"iTunes cover art search error for '{artist} - {title}': {exc}")
+    return None
 
 
 @router.get("", response_model=list[schemas.Station])
@@ -64,9 +88,6 @@ async def get_station_stream(
             "Cache-Control": "no-cache, no-store, must-revalidate",
         },
     )
-
-
-from app.logging_config import logger
 
 
 @router.get("/{station_id}/metadata")
@@ -120,12 +141,30 @@ async def get_station_metadata(
                             station.bit_depth = int(meta_json.get("bit_depth"))
                         if meta_json.get("sample_rate"):
                             station.sample_rate = int(meta_json.get("sample_rate"))
+                        if meta_json.get("cover_url"):
+                            station.cover_url = meta_json.get("cover_url")
                         repo.db.commit()
                         repo.db.refresh(station)
                         has_live_info = True
-                        logger.info(f"Fetched HTTP JSON metadata for '{station.name}': '{station.current_artist} - {station.current_title}'")
+                        logger.info(
+                            f"Fetched HTTP JSON metadata for '{station.name}': '{station.current_artist} - {station.current_title}'"
+                        )
         except Exception as exc:
             logger.warning(f"HTTP JSON metadata probe failed for {station.metadata_url}: {exc}")
+
+    # 3. If track info exists but cover_url is missing, fetch album artwork dynamically
+    if (
+        station.has_track_info
+        and station.current_artist
+        and station.current_title
+        and not station.cover_url
+    ):
+        art_url = await fetch_itunes_cover_art(station.current_artist, station.current_title)
+        if art_url:
+            station.cover_url = art_url
+            repo.db.commit()
+            repo.db.refresh(station)
+            logger.info(f"Dynamically retrieved album cover art for '{station.current_artist} - {station.current_title}': {art_url}")
 
     genre_name = station.genre.name if station.genre else "Live Music"
     cover_url = station.cover_url or f"/stations/{station.id}/cover"
