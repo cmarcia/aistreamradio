@@ -229,6 +229,22 @@
       "primary_color": "#f59e0b",
       "secondary_color": "#b45309",
       "cover_url": null
+    },
+    {
+      "name": "AI Stream Radio (HLS Live)",
+      "frequency": "Online HLS",
+      "genre": "Indie / Alternative / Post-Rock",
+      "stream_url": "https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8",
+      "metadata_url": "/stations/13/metadata",
+      "current_artist": "AI Stream Radio",
+      "current_title": null,
+      "current_album": "Live HLS Broadcast",
+      "has_track_info": false,
+      "bit_depth": 24,
+      "sample_rate": 48000,
+      "primary_color": "#00f3ff",
+      "secondary_color": "#3b82f6",
+      "cover_url": null
     }
   ]
 }
