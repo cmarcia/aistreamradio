@@ -37,7 +37,9 @@ class Station(Base):
     current_title: Mapped[str | None] = mapped_column(String, nullable=True)
     current_album: Mapped[str | None] = mapped_column(String, nullable=True)
     has_track_info: Mapped[bool] = mapped_column(Integer, nullable=False, default=True)
-    date: Mapped[str | None] = mapped_column(String, nullable=True, default="2026")
+    date: Mapped[str | None] = mapped_column(
+        String, nullable=True, default=lambda: str(datetime.now(timezone.utc).year)
+    )
     bit_depth: Mapped[int | None] = mapped_column(Integer, nullable=True, default=16)
     sample_rate: Mapped[int | None] = mapped_column(Integer, nullable=True, default=44100)
     cover_url: Mapped[str | None] = mapped_column(String, nullable=True)

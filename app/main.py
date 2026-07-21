@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -87,6 +88,7 @@ async def get_station_stream(station_id: int, db: Session = Depends(get_db)):
 
 @app.get("/stations/{station_id}/metadata")
 async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
+    current_year = str(datetime.now(timezone.utc).year)
     station = db.scalar(
         select(models.Station).where(models.Station.id == station_id).options(joinedload(models.Station.genre))
     )
@@ -97,7 +99,7 @@ async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
             "album": "Radio Broadcast",
             "genre": "Live Music",
             "has_track_info": False,
-            "date": "2026",
+            "date": current_year,
             "bit_depth": 16,
             "sample_rate": 44100,
             "cover_url": f"/stations/{station_id}/cover",
@@ -123,7 +125,7 @@ async def get_station_metadata(station_id: int, db: Session = Depends(get_db)):
         "album": station.current_album or "Radio Broadcast",
         "genre": genre_name,
         "has_track_info": station.has_track_info,
-        "date": station.date or "2026",
+        "date": station.date or current_year,
         "bit_depth": station.bit_depth or 16,
         "sample_rate": station.sample_rate or 44100,
         "cover_url": cover_url,

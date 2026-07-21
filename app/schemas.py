@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -30,7 +30,7 @@ class StationBase(BaseModel):
     current_title: str | None = None
     current_album: str | None = None
     has_track_info: bool = True
-    date: str | None = "2026"
+    date: str | None = Field(default_factory=lambda: str(datetime.now(timezone.utc).year))
     bit_depth: int | None = 16
     sample_rate: int | None = 44100
     cover_url: str | None = None
