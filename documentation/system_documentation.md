@@ -60,10 +60,15 @@ graph TD
     subgraph Backend [FastAPI Application Server]
         API["FastAPI Endpoints (main.py)"]
         ORM["SQLAlchemy ORM (models.py)"]
+        iTunesSvc["iTunes Search Service (services/itunes.py)"]
     end
 
     subgraph DB [SQLite Database]
-        Tables["Tables (stations, songs, ratings)"]
+        Tables["Tables (stations, songs, ratings, artists, albums)"]
+    end
+
+    subgraph iTunesAPI [External Services]
+        iTunes["iTunes Search API (itunes.apple.com)"]
     end
 
     %% Audio and Metadata Streams
@@ -76,9 +81,13 @@ graph TD
     UI -->|POST /songs/rating (Base64 Cover)| API
     UI -->|GET /songs/disliked| API
     UI -->|GET /stations| API
+    UI -->|GET /itunes/search| API
+    API --> iTunesSvc
+    iTunesSvc -->|HTTP Search Query| iTunes
 
     %% DB relations
     API --> ORM
+    iTunesSvc --> ORM
     ORM -->|Read/Write| Tables
 ```
 
@@ -87,10 +96,12 @@ graph TD
 ## 4. The Tasks Tracker
 
 ### Completed Refactoring & Feature Additions
+* [x] **iTunes Search & Persistence Service:** Implemented `ITunesService` ([app/services/itunes.py](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/services/itunes.py)) querying `https://itunes.apple.com/search?term=artist+song+album&entity=song&limit=1` to retrieve track details, higher-resolution cover art (`600x600bb`), album name, artist name, and release date/year.
+* [x] **Artist & Album Database Tables:** Added `Artist` (`artists`) and `Album` (`albums`) models in [app/models.py](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/models.py) with repository patterns ([app/repositories/artists.py](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/repositories/artists.py), [app/repositories/albums.py](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/repositories/albums.py)) and API endpoints (`GET /itunes/search`).
 * [x] **Modularize Frontend:** Decoupled `app.js` into domain-focused files in `app/static/Script/`: [player.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/player.js), [rating.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/rating.js), [disliked.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/disliked.js), [util.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/util.js), [formatters.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/formatters.js), and [main.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/main.js).
 * [x] **Clickable Station Navigation:** Made station names in "Previous tracks" and "Songs you disliked" list cards interactive buttons. Clicking any station tunes directly to that station, starts playback, and selects it in the top station dropdown with a `✓` checkmark indicator.
 * [x] **Organize Static Assets:** Organized JavaScript files into [app/static/Script/](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script), image assets into [app/static/Images/](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Images), and stylesheets into [app/static/CSS/](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/CSS).
-* [x] **Add Frontend Tests:** Created a unit-test suite in [formatters.test.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/tests/formatters.test.js) (Vitest) validating DOM-free logic.
+* [x] **Add Frontend & Backend Tests:** Created unit-test suites in [formatters.test.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/tests/formatters.test.js) (Vitest) and [test_itunes_service.py](file:///Users/charliemarciano/workspace/projects/aistreamradio/tests/test_itunes_service.py) (pytest).
 * [x] **Centralize API Calls:** Refactored repetitive fetch blocks using `apiFetch()` and `apiFetchOrWarn()` helpers in [util.js](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/Script/util.js).
 * [x] **Implement Futuristic Dark Theme:** Overhauled [style.css](file:///Users/charliemarciano/workspace/projects/aistreamradio/app/static/CSS/style.css) with an interactive dark sci-fi hud layout, glassmorphic styling cards, and pulsing drop-shadows.
 * [x] **Signal Visualizer:** Integrated an equalizer interface displaying 16 gradient bars that dynamically animate while playback is active and reset during pauses/mutes.
@@ -147,6 +158,7 @@ The project includes thorough, automated end-to-end integration and unit test su
 
 ### 1. Backend Python Tests (pytest)
 Located in `/tests`, covering persistent DB integration:
+* **`test_itunes_service.py`:** Tests iTunes API search queries, cover URL resolution (`600x600bb`), release year parsing, `Artist` & `Album` database models and relationships, repository helpers, and `GET /itunes/search` API endpoint.
 * **`test_stations_integration.py`:** Tests station creation and details fetch.
 * **`test_song_rating_integration.py`:** Asserts rating aggregations, checks user constraints, and validates rating inputs.
 * **`test_disliked_songs_integration.py`:** Asserts pagination offsets, page size overrides, and cover art retrieval rules.

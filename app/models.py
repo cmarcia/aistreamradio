@@ -77,3 +77,38 @@ class SongRating(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
     )
+
+
+class Artist(Base):
+    __tablename__ = "artists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    albums: Mapped[list["Album"]] = relationship("Album", back_populates="artist")
+
+
+class Album(Base):
+    __tablename__ = "albums"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    artist_id: Mapped[int | None] = mapped_column(ForeignKey("artists.id"), nullable=True, index=True)
+    cover_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    release_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+    )
+
+    artist: Mapped[Artist | None] = relationship("Artist", back_populates="albums")
+
+    @property
+    def album_url(self) -> str | None:
+        """Alias for cover_url to support accessing the cover art URL as album_url."""
+        return self.cover_url
+

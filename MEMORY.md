@@ -58,18 +58,23 @@ aistreamradio/
 │   ├── icy.py                # Async ICY stream metadata extractor engine
 │   ├── logging_config.py     # Structured logger configuration & formatting
 │   ├── main.py               # FastAPI application entry point with middleware & global exception handlers
-│   ├── models.py             # SQLAlchemy ORM models (Station, Genre, Song, SongRating)
+│   ├── models.py             # SQLAlchemy ORM models (Station, Genre, Song, SongRating, Artist, Album)
 │   ├── repositories/         # Database Repository Pattern implementations
-│   │   ├── deps.py           # FastAPI Dependency Injection providers (get_genre_repository, get_station_repository, get_song_repository)
+│   │   ├── deps.py           # Dependency Injection providers (get_genre_repository, get_station_repository, get_song_repository, get_artist_repository, get_album_repository)
+│   │   ├── albums.py         # AlbumRepository
+│   │   ├── artists.py        # ArtistRepository
 │   │   ├── genres.py         # GenreRepository
 │   │   ├── songs.py          # SongRepository
 │   │   └── stations.py       # StationRepository
 │   ├── routers/              # Modular APIRouters per domain
 │   │   ├── genres.py         # Genre endpoint handlers
 │   │   ├── health.py         # Health check & SPA index handlers
+│   │   ├── itunes.py         # iTunes search & metadata persistence endpoint handlers
 │   │   ├── songs.py          # Song rating & disliked track handlers
 │   │   └── stations.py       # Station audio, metadata & cover handlers
-│   ├── schemas.py            # Pydantic schemas for requests, responses, pagination
+│   ├── schemas.py            # Pydantic schemas for requests, responses, pagination, iTunes search
+│   ├── services/             # Application service modules
+│   │   └── itunes.py         # iTunes API search client & DB persistence service
 │   └── static/               # Frontend static assets
 │       ├── index.html        # Main HUD web interface layout
 │       ├── CSS/              # CSS stylesheets (style.css)
@@ -82,6 +87,7 @@ aistreamradio/
 ├── tests/                    # Backend Pytest test suite
 │   ├── test_disliked_songs_integration.py
 │   ├── test_icy_unit.py
+│   ├── test_itunes_service.py # iTunes service, Artist/Album models & repositories unit/integration tests
 │   ├── test_song_rating_integration.py
 │   ├── test_song_rating_persistence.py
 │   ├── test_song_rating_unit.py
@@ -136,6 +142,21 @@ aistreamradio/
 - `created_at`: `DateTime(timezone=True)` (Default: UTC now)
 - **Constraint:** `UniqueConstraint("song_id", "listener_id", name="uq_rating_song_listener")`
 
+### `artists` Table (`app/models.py`)
+- `id`: `Integer` (Primary Key, Indexed)
+- `name`: `String` (Not Null, Unique, Indexed)
+- `created_at`: `DateTime(timezone=True)` (Default: UTC now)
+- **Relationship:** `albums` -> `list[Album]` (One-to-Many back-populated by `Album.artist`)
+
+### `albums` Table (`app/models.py`)
+- `id`: `Integer` (Primary Key, Indexed)
+- `title`: `String` (Not Null)
+- `artist_id`: `Integer` (ForeignKey `artists.id`, Nullable, Indexed)
+- `cover_url`: `String` (Nullable, album URL for cover art, aliased as `.album_url`)
+- `release_year`: `Integer` (Nullable, album release year)
+- `created_at`: `DateTime(timezone=True)` (Default: UTC now)
+- **Relationship:** `artist` -> `Artist` (Many-to-One linked via `artist_id`)
+
 ---
 
 ## 5. API Reference
@@ -156,6 +177,8 @@ aistreamradio/
 | `/songs/rating` | `GET` | `artist`, `title`, `listener_id?` | Retrieves song rating totals (thumbs up/down) & user's rating |
 | `/songs/rating` | `POST` | `SongRatingCreate` JSON | Rates song (`up` or `down`). Returns HTTP 409 if already rated |
 | `/songs/disliked` | `GET` | `listener_id`, `page`, `page_size` | Paginated list of listener's downvoted tracks with cover images |
+| `/itunes/search` | `GET` | `title`, `artist`, `release_date?`, `album?` | Searches iTunes API for track info & artwork URL, persisting Artist & Album rows |
+
 
 ---
 

@@ -25,7 +25,8 @@ class StationBase(BaseModel):
     frequency: str
     genre_id: int | None = None
     stream_url: str = "https://d3d4yli4hf5bmh.cloudfront.net/hls/live.m3u8"
-    metadata_url: str | None = "https://d3d4yli4hf5bmh.cloudfront.net/metadata.json"
+    metadata_url: str | None = ("https://d3d4yli4hf5"
+                                "bmh.cloudfront.net/metadata.json")
     current_artist: str | None = None
     current_title: str | None = None
     current_album: str | None = None
@@ -78,3 +79,58 @@ class DislikedSongsPage(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class ArtistBase(BaseModel):
+    name: str
+
+
+class ArtistCreate(ArtistBase):
+    pass
+
+
+class Artist(ArtistBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+
+
+class AlbumBase(BaseModel):
+    title: str
+    artist_id: int | None = None
+    cover_url: str | None = None
+    release_year: int | None = None
+
+
+class AlbumCreate(AlbumBase):
+    pass
+
+
+class Album(AlbumBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    created_at: datetime
+    artist: Artist | None = None
+
+
+class ITunesSearchQuery(BaseModel):
+    title: str
+    artist: str
+    release_date: str | None = None
+    album: str | None = None
+
+
+class ITunesSearchResult(BaseModel):
+    artist_name: str
+    track_title: str
+    album_name: str | None = None
+    cover_url: str | None = None
+    release_date: str | None = None
+    release_year: int | None = None
+    itunes_url: str | None = None
+    genre: str | None = None
+    artist_id: int | None = None
+    album_id: int | None = None
+

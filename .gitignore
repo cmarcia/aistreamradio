@@ -8,3 +8,4 @@ data/*.db
 .claude/
 .claude
 .idea/
+node_modules/.vite/

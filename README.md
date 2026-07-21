@@ -12,18 +12,21 @@ Prototype website backend: **FastAPI** web server + **SQLite** database, running
 
 ```
 app/
-  config.py     # settings (DATABASE_URL, etc.) via pydantic-settings
-  database.py   # SQLAlchemy engine, session, Base, get_db dependency
-  models.py     # ORM models (Station)
-  schemas.py    # Pydantic request/response schemas
-  main.py       # FastAPI app + routes
-  static/       # Frontend static assets
-    CSS/        # CSS stylesheets (style.css)
-    Images/     # Image assets (default-cover.svg, logo.png)
-    Script/     # Modular JS files (main.js, player.js, rating.js, etc.)
-    tests/      # Frontend unit tests (formatters.test.js)
-data/           # SQLite file lives here (git-ignored)
-pyproject.toml  # dependencies (managed with uv)
+  config.py       # settings (DATABASE_URL, etc.) via pydantic-settings
+  database.py     # SQLAlchemy engine, session, Base, get_db dependency
+  models.py       # ORM models (Station, Genre, Song, SongRating, Artist, Album)
+  schemas.py      # Pydantic request/response schemas
+  repositories/   # Database repository pattern modules (artists, albums, songs, stations, genres)
+  services/       # Business logic services (itunes.py)
+  routers/        # Modular API routers (health, stations, songs, genres, itunes)
+  main.py         # FastAPI app entry point
+  static/         # Frontend static assets
+    CSS/          # CSS stylesheets (style.css)
+    Images/       # Image assets (default-cover.svg, logo.png)
+    Script/       # Modular JS files (main.js, player.js, rating.js, etc.)
+    tests/        # Frontend unit tests (formatters.test.js)
+data/             # SQLite file lives here (git-ignored)
+pyproject.toml    # dependencies (managed with uv)
 uv.lock
 Dockerfile
 docker-compose.yml
@@ -65,6 +68,8 @@ uv run --python 3.13 uvicorn app.main:app --reload
 | GET    | `/songs/rating`    | Get a song's thumbs up/down totals + your rating |
 | POST   | `/songs/rating`    | Rate a song up/down (once per listener)          |
 | GET    | `/songs/disliked`  | Paginated list of songs you've disliked          |
+| GET    | `/itunes/search`   | Search iTunes for song/album info & artwork and persist Artist/Album records |
+
 
 ## Configuration
 
