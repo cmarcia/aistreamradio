@@ -75,25 +75,35 @@ class StationRepository:
                 g = self.genre_repo.get_or_create(name=name, description=g_data.get("description"))
                 genres_map[name] = g.id
 
-            stations_to_add = []
+            stations = []
             for idx, st_data in enumerate(data.get("stations", []), start=1):
                 st = dict(st_data)
+                name = st["name"]
                 genre_name = st.pop("genre", None)
                 genre_id = genres_map.get(genre_name) if genre_name else None
 
                 if "metadata_url" not in st or not st["metadata_url"]:
                     st["metadata_url"] = f"/stations/{idx}/metadata"
 
-                station = models.Station(genre_id=genre_id, **st)
-                stations_to_add.append(station)
+                existing = self.db.scalar(select(models.Station).where(models.Station.name == name))
+                if existing:
+                    existing.genre_id = genre_id
+                    existing.frequency = st.get("frequency", existing.frequency)
+                    existing.stream_url = st.get("stream_url", existing.stream_url)
+                    existing.metadata_url = st.get("metadata_url", existing.metadata_url)
+                    existing.primary_color = st.get("primary_color", existing.primary_color)
+                    existing.secondary_color = st.get("secondary_color", existing.secondary_color)
+                    stations.append(existing)
+                else:
+                    station = models.Station(genre_id=genre_id, **st)
+                    self.db.add(station)
+                    stations.append(station)
 
-            if stations_to_add:
-                self.db.add_all(stations_to_add)
-                self.db.commit()
-                logger.info(f"Successfully seeded {len(stations_to_add)} stations from {json_path.name}")
-
-            return stations_to_add
+            self.db.commit()
+            logger.info(f"Successfully synced {len(stations)} station records in database from {json_path.name}")
+            return stations
         except Exception as exc:
             logger.error(f"Error seeding initial stations from {json_path}: {exc}", exc_info=True)
             self.db.rollback()
             return []
+

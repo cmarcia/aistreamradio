@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -18,6 +18,55 @@ class AlbumRepository:
         if artist_id is not None:
             query = query.where(models.Album.artist_id == artist_id)
         return self.db.scalar(query)
+
+    def get_by_artist_name_and_title(
+        self, artist_name: str, album_title: str | None = None, track_title: str | None = None
+    ) -> models.Album | None:
+        """
+        Finds an existing Album in the DB for the given artist name.
+        Optionally filters by album_title or track_title.
+        Returns the Album object if found with a valid cover_url.
+        """
+        if not artist_name:
+            return None
+
+        from app.services.itunes import clean_metadata_string
+
+        norm_artist = artist_name.strip().lower()
+        clean_artist = clean_metadata_string(artist_name).lower()
+        artist_candidates = list(filter(None, {norm_artist, clean_artist}))
+
+        if album_title and album_title.strip():
+            norm_album = album_title.strip().lower()
+            clean_album = clean_metadata_string(album_title).lower()
+            album_candidates = list(filter(None, {norm_album, clean_album}))
+
+            for art in artist_candidates:
+                for alb in album_candidates:
+                    query = (
+                        select(models.Album)
+                        .join(models.Artist)
+                        .where(func.lower(models.Artist.name) == art)
+                        .where(func.lower(models.Album.title) == alb)
+                    )
+                    album = self.db.scalar(query)
+                    if album and album.cover_url:
+                        return album
+
+        for art in artist_candidates:
+            fallback_query = (
+                select(models.Album)
+                .join(models.Artist)
+                .where(func.lower(models.Artist.name) == art)
+                .where(models.Album.cover_url.is_not(None))
+            )
+            album = self.db.scalar(fallback_query)
+            if album:
+                return album
+
+        return None
+
+
 
     def create(self, album_in: schemas.AlbumCreate) -> models.Album:
         album = models.Album(

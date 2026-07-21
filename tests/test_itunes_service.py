@@ -284,3 +284,82 @@ def test_itunes_search_api_endpoint_404(client):
         assert resp.status_code == 404
         assert resp.json()["detail"] == "No information found on iTunes for the requested track"
 
+
+@pytest.mark.anyio
+async def test_itunes_service_db_cache_hit(db_session):
+    artist_repo = ArtistRepository(db_session)
+    album_repo = AlbumRepository(db_session)
+
+    artist = artist_repo.create(schemas.ArtistCreate(name="Daft Punk"))
+    album = album_repo.create(
+        schemas.AlbumCreate(
+            title="Discovery",
+            artist_id=artist.id,
+            cover_url="https://example.com/cached_discovery.jpg",
+            release_year=2001,
+        )
+    )
+
+    mock_client = AsyncMock(spec=httpx.AsyncClient)
+    service = ITunesService(db_session)
+
+    result = await service.fetch_and_persist(
+        title="One More Time",
+        artist="Daft Punk",
+        album="Discovery",
+        client=mock_client,
+    )
+
+    assert result is not None
+    assert result.cached is True
+    assert result.cover_url == "https://example.com/cached_discovery.jpg"
+    assert result.album_name == "Discovery"
+    assert mock_client.get.call_count == 0
+
+
+@pytest.mark.anyio
+async def test_itunes_service_cache_miss_then_hit_cycle(db_session):
+    mock_response = MagicMock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = {
+        "resultCount": 1,
+        "results": [
+            {
+                "artistName": "Gorillaz",
+                "trackName": "Feel Good Inc.",
+                "collectionName": "Demon Days",
+                "artworkUrl100": "https://example.com/gorillaz_100x100bb.jpg",
+                "releaseDate": "2005-05-11T00:00:00Z",
+            }
+        ],
+    }
+
+    mock_client = AsyncMock(spec=httpx.AsyncClient)
+    mock_client.get.return_value = mock_response
+
+    service = ITunesService(db_session)
+
+    # First call: Cache Miss -> calls iTunes and populates DB
+    result1 = await service.fetch_and_persist(
+        title="Feel Good Inc.",
+        artist="Gorillaz",
+        album="Demon Days",
+        client=mock_client,
+    )
+    assert result1 is not None
+    assert result1.cached is False
+    assert mock_client.get.call_count == 1
+
+    # Second call: Cache Hit -> reads directly from DB
+    result2 = await service.fetch_and_persist(
+        title="Feel Good Inc.",
+        artist="Gorillaz",
+        album="Demon Days",
+        client=mock_client,
+    )
+    assert result2 is not None
+    assert result2.cached is True
+    assert result2.cover_url == "https://example.com/gorillaz_600x600bb.jpg"
+    assert mock_client.get.call_count == 1
+
+
