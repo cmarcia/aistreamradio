@@ -190,10 +190,11 @@ function applyMetadata(meta) {
 }
 
 async function pollMetadata() {
-  if (!METADATA_URL || !auth.currentUser) return;
+  if (!METADATA_URL) return;
   const meta = await apiFetchOrWarn(METADATA_URL, { cache: "no-store" }, "metadata fetch failed");
   if (meta) applyMetadata(meta);
 }
+
 
 function selectStation(st, autoPlay = false) {
   if (!st) return;
