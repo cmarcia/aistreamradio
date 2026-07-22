@@ -199,8 +199,8 @@
           </div>
 
           <div class="control-actions">
-            <button class="btn-ctrl-icon" id="rateUpBtn" title="Like">👍 <span id="thumbUpCount">0</span></button>
-            <button class="btn-ctrl-icon" id="rateDownBtn" title="Dislike">👎 <span id="thumbDownCount">0</span></button>
+            <button class="btn-ctrl-icon" id="thumbUp" title="Like">👍 <span id="thumbUpCount">0</span></button>
+            <button class="btn-ctrl-icon" id="thumbDown" title="Dislike">👎 <span id="thumbDownCount">0</span></button>
             <button class="btn-ctrl-icon" id="prevTrackBtn" title="Previous Track">⏮</button>
             
             <button class="btn-play-pause" id="playBtn" aria-label="Play/Pause">
@@ -214,10 +214,8 @@
           </div>
         </div>
 
-        <!-- Hidden compat elements for rating JS -->
-        <button id="thumbUp" style="display:none"></button>
-        <button id="thumbDown" style="display:none"></button>
         <span id="stationGenrePill" style="display:none"></span>
+
         <span id="sourceQuality" style="display:none"></span>
         <span id="streamQuality" style="display:none"></span>
         <div id="statusMsg" style="display:none"></div>
