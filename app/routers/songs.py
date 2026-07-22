@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-
-from app import models, schemas
-from app.config import settings
+from app.models import auth as auth_models
+from app.utilities import schemas
+from app.Configuration.config import settings
 from app.repositories.deps import get_song_repository
 from app.repositories.songs import SongRepository
 from app.utilities.auth import get_optional_user
+
 
 router = APIRouter(prefix="/songs", tags=["songs"])
 
@@ -15,7 +16,8 @@ def get_song_rating(
     artist: str,
     title: str,
     listener_id: str | None = None,
-    current_user: models.User | None = Depends(get_optional_user),
+    current_user: auth_models.User | None = Depends(get_optional_user),
+
     repo: SongRepository = Depends(get_song_repository),
 ):
     song = repo.get_or_create(artist, title)
@@ -27,7 +29,8 @@ def get_song_rating(
 @router.post("/rating", response_model=schemas.SongRatingSummary, status_code=201)
 def rate_song(
     payload: schemas.SongRatingCreate,
-    current_user: models.User | None = Depends(get_optional_user),
+    current_user: auth_models.User | None = Depends(get_optional_user),
+
     repo: SongRepository = Depends(get_song_repository),
 ):
     song = repo.get_or_create(payload.artist, payload.title, payload.cover_image)
@@ -54,7 +57,8 @@ def list_disliked_songs(
     listener_id: str | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=None, ge=1, le=100),
-    current_user: models.User | None = Depends(get_optional_user),
+    current_user: auth_models.User | None = Depends(get_optional_user),
+
     repo: SongRepository = Depends(get_song_repository),
 ):
     user_id = current_user.id if current_user else None

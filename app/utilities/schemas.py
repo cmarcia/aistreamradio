@@ -3,6 +3,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.auth import OAuthProviderInfo, SessionResponse, TokenPayload, UserRead
+
+
 
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)

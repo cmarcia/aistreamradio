@@ -1,7 +1,8 @@
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app import models, schemas
+from app import models
+from app.utilities import schemas
 
 
 class AlbumRepository:

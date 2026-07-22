@@ -1,7 +1,7 @@
 import re
 import httpx
 
-from app.logging_config import logger
+from app.Configuration.logging_config import logger
 
 
 def parse_icy_payload(payload: str) -> dict | None:

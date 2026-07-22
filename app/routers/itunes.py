@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app import schemas
-from app.database import get_db
+from app.utilities import schemas
+from app.utilities.database import get_db
 from app.services.itunes import ITunesService
 
 router = APIRouter(prefix="/itunes", tags=["itunes"])

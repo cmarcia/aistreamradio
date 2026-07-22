@@ -14,7 +14,6 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     environment: str = "development"
 
-
 class AuthSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -30,6 +29,7 @@ class AuthSettings(BaseSettings):
     microsoft_client_id: str | None = None
     microsoft_client_secret: str | None = None
     microsoft_tenant_id: str = "common"
+
 
 
 settings = Settings()

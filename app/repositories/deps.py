@@ -1,12 +1,13 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.utilities.database import get_db
 from app.repositories.albums import AlbumRepository
 from app.repositories.artists import ArtistRepository
 from app.repositories.genres import GenreRepository
 from app.repositories.songs import SongRepository
 from app.repositories.stations import StationRepository
+from app.repositories.users import UserRepository
 
 
 from app.repositories.users import UserRepository

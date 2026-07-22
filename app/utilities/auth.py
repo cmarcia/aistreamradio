@@ -3,13 +3,16 @@ import hashlib
 import secrets
 import jwt
 from fastapi import Depends, HTTPException, Request, status
-from sqlalchemy import select
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from app.Configuration.auth_config import auth_settings
 from app import models
-from app.config import auth_settings
+from app.repositories.users import UserRepository
+from app.schemas.auth import TokenPayload
+from app.utilities.database import get_db
 
-from app.database import get_db
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 
 
 def hash_password(password: str) -> str:
@@ -26,6 +29,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         return secrets.compare_digest(key, expected_key)
     except Exception:
         return False
+
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -50,13 +54,14 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     )
 
 
-def decode_access_token(token: str) -> dict:
+def decode_access_token(token: str) -> TokenPayload:
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             token,
             auth_settings.auth_secret_key,
             algorithms=[auth_settings.auth_algorithm],
         )
+        return TokenPayload(**payload)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -66,10 +71,12 @@ def decode_access_token(token: str) -> dict:
 
 
 def _extract_token_from_request(request: Request) -> str | None:
+    # 1. Check Cookie first
     cookie_token = request.cookies.get(auth_settings.session_cookie_name)
     if cookie_token:
         return cookie_token
 
+    # 2. Check Authorization Bearer header
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         return auth_header.split(" ", 1)[1].strip()
@@ -86,11 +93,10 @@ def get_optional_user(
 
     try:
         payload = decode_access_token(token)
-        user_id = payload.get("sub")
-        if user_id:
-            user = db.scalar(select(models.User).where(models.User.id == user_id))
-            if user and user.is_active:
-                return user
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(payload.sub)
+        if user and user.is_active:
+            return user
     except HTTPException:
         pass
 
