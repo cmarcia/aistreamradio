@@ -25,7 +25,8 @@ def test_index_page_links_external_scripts_in_dependency_order(client):
         '<script src="/static/Script/player.js"></script>',
         '<script src="/static/Script/rating.js"></script>',
         '<script src="/static/Script/disliked.js"></script>',
-        '<script src="/static/Script/main.js"></script>',
+        '<script type="module" src="/static/Script/main.js"></script>',
+
     ]
     positions = [res.text.index(tag) for tag in expected_order]
     assert positions == sorted(positions)

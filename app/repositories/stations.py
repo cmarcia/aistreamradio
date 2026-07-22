@@ -5,8 +5,9 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app import models, schemas
-from app.logging_config import logger
+from app import models
+from app.utilities import schemas
+from app.Configuration.logging_config import logger
 from app.repositories.genres import GenreRepository
 
 

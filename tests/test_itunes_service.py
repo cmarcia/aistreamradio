@@ -5,8 +5,9 @@ from sqlalchemy.pool import StaticPool
 import httpx
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app import models, schemas
-from app.database import Base
+from app import models
+from app.utilities import schemas
+from app.utilities.database import Base
 from app.repositories.albums import AlbumRepository
 from app.repositories.artists import ArtistRepository
 from app.services.itunes import (

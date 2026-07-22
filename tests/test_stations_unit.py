@@ -1,5 +1,6 @@
 import pytest
-from app import models, schemas
+from app import models
+from app.utilities import schemas
 
 
 def test_genre_model_instantiation():

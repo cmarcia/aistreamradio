@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app import schemas
+from app.utilities import schemas
 from app.repositories.deps import get_genre_repository
 from app.repositories.genres import GenreRepository
 

@@ -1,3 +1,5 @@
+import { AuthClient } from '/static/Script/auth-client.js';
+
 let METADATA_URL = "/stations/1/metadata";
 const DEFAULT_COVER_URL = "/static/Images/default-cover.svg";
 const COVER_URL = "/static/Images/default-cover.svg";
@@ -11,6 +13,19 @@ const trackName = document.getElementById("trackName");
 const sourceQuality = document.getElementById("sourceQuality");
 const historyList = document.getElementById("historyList");
 const stationSelect = document.getElementById("stationSelect");
+
+// View containers & auth elements
+const authScreen = document.getElementById("authScreen");
+const authenticatedApp = document.getElementById("authenticatedApp");
+const stationNav = document.getElementById("stationNav");
+const userProfileNav = document.getElementById("userProfileNav");
+const navUserName = document.getElementById("navUserName");
+const navUserAvatar = document.getElementById("navUserAvatar");
+const logoutBtn = document.getElementById("logoutBtn");
+const providerList = document.getElementById("providerList");
+
+const auth = new AuthClient();
+let isAppInitialized = false;
 
 if (coverArt) {
   coverArt.onerror = () => {
@@ -51,11 +66,15 @@ function renderHistory() {
     (t) => {
       const st = findStationByArtist(t.artist, stationsList) || (t.station_id && stationsList.find((s) => Number(s.id) === Number(t.station_id)));
       const stId = st ? st.id : "";
-      return `<li><button type="button" class="station-click-btn" data-station-id="${stId}" data-artist="${escapeHtml(t.artist)}" title="Click to tune into ${escapeHtml(t.artist)}"><b>${escapeHtml(t.artist)}</b></button><span class="separator">:</span> <i>${escapeHtml(t.title)}</i></li>`;
+      const thumb = t.cover_url
+        ? `<img class="thumb" src="${escapeHtml(t.cover_url)}" alt="" onerror="this.src='${DEFAULT_COVER_URL}'">`
+        : `<img class="thumb" src="${DEFAULT_COVER_URL}" alt="">`;
+      return `<li>${thumb}<div class="history-item-text"><button type="button" class="station-click-btn" data-station-id="${stId}" data-artist="${escapeHtml(t.artist)}" title="Click to tune into ${escapeHtml(t.artist)}"><b>${escapeHtml(t.artist)}</b></button><span class="separator">:</span> <i>${escapeHtml(t.title)}</i></div></li>`;
     },
     "Nothing played yet this session."
   );
 }
+
 
 async function fetchTrackCoverArt(artist, title, album) {
   if (!artist || !title) return;
@@ -67,7 +86,6 @@ async function fetchTrackCoverArt(artist, title, album) {
   const data = await apiFetchOrWarn(`/itunes/search?${params.toString()}`, {}, "Cover art lookup failed");
   if (!data) return;
 
-  // Race condition guard: ensure track has not changed while request was in-flight
   if (currentTrackKey !== activeTrackKey) return;
 
   if (data.cover_url) {
@@ -116,12 +134,17 @@ function applyMetadata(meta) {
     currentTrackKey = key;
     trackName.textContent = meta.title;
     artistName.textContent = meta.artist || "Unknown Artist";
+    const trackInfoTag = document.getElementById("trackInfoTag");
+    if (trackInfoTag) trackInfoTag.textContent = meta.artist || "VECTOR PULSE";
   } else {
     currentTrackKey = null;
     currentTrackCoverUrl = null;
     trackName.textContent = "No track available";
     artistName.textContent = (meta && meta.artist) || "Live Broadcast";
+    const trackInfoTag = document.getElementById("trackInfoTag");
+    if (trackInfoTag) trackInfoTag.textContent = (meta && meta.artist) || "VECTOR PULSE";
   }
+
   lastMeta = meta;
 
   let albumStr = (meta && meta.album) || "";
@@ -139,18 +162,21 @@ function applyMetadata(meta) {
     genrePill.textContent = "GENRE: " + (meta.genre || window.currentStationGenre);
   }
 
-  if (meta && meta.cover_url) {
-    currentTrackCoverUrl = meta.cover_url.startsWith("http")
-      ? meta.cover_url
-      : meta.cover_url + "?t=" + Date.now();
-    coverArt.src = currentTrackCoverUrl;
-  } else if (currentTrackCoverUrl) {
-    coverArt.src = currentTrackCoverUrl;
-  } else if (currentStation) {
-    coverArt.src = `/stations/${currentStation.id}/cover?t=` + Date.now();
-  } else {
-    coverArt.src = DEFAULT_COVER_URL;
+  if (coverArt) {
+    if (meta && meta.cover_url) {
+      currentTrackCoverUrl = meta.cover_url.startsWith("http")
+        ? meta.cover_url
+        : meta.cover_url + "?t=" + Date.now();
+      coverArt.src = currentTrackCoverUrl;
+    } else if (currentTrackCoverUrl) {
+      coverArt.src = currentTrackCoverUrl;
+    } else if (currentStation) {
+      coverArt.src = `/stations/${currentStation.id}/cover?t=` + Date.now();
+    } else {
+      coverArt.src = DEFAULT_COVER_URL;
+    }
   }
+
 
   if (hasTrackInfo && isNewTrack) {
     fetchTrackCoverArt(meta.artist, meta.title, meta.album);
@@ -164,7 +190,7 @@ function applyMetadata(meta) {
 }
 
 async function pollMetadata() {
-  if (!METADATA_URL) return;
+  if (!METADATA_URL || !auth.currentUser) return;
   const meta = await apiFetchOrWarn(METADATA_URL, { cache: "no-store" }, "metadata fetch failed");
   if (meta) applyMetadata(meta);
 }
@@ -174,15 +200,14 @@ function selectStation(st, autoPlay = false) {
   currentStation = st;
   currentTrackKey = null;
   currentTrackCoverUrl = null;
-  updateStationSelectOptions(st.id);
-
-
   const brandName = document.getElementById("brandName");
+  if (brandName && st && st.name) {
+    brandName.textContent = `AI Streaming Radio – ${st.name}`;
+  }
+
   const streamQuality = document.getElementById("streamQuality");
 
-  if (brandName && st.name) {
-    brandName.textContent = st.name;
-  }
+
   const genreStr = typeof st.genre === "object" && st.genre !== null ? st.genre.name : st.genre;
   if (genreStr) {
     window.currentStationGenre = genreStr;
@@ -204,7 +229,42 @@ function selectStation(st, autoPlay = false) {
     METADATA_URL = st.metadata_url;
     pollMetadata();
   }
+  renderStationCards();
 }
+
+
+function renderStationCards() {
+  const container = document.getElementById("stationCardsList");
+  if (!container || !stationsList || !stationsList.length) return;
+
+  const mockListeners = ["142k lisk", "98k lisk", "210k lisk", "75k lisk"];
+
+  container.innerHTML = stationsList.map((st, idx) => {
+    const isSelected = currentStation && Number(st.id) === Number(currentStation.id);
+    const genreStr = typeof st.genre === "object" && st.genre !== null ? st.genre.name : (st.genre || "Cyber Beats");
+    const coverPath = `/stations/${st.id}/cover`;
+    const listeners = mockListeners[idx % mockListeners.length];
+    return `
+      <div class="station-card ${isSelected ? "active" : ""}" data-station-id="${st.id}">
+        <div class="station-icon-frame">
+          <img class="station-icon-img" src="${coverPath}" alt="${escapeHtml(st.name)}" onerror="this.src='${DEFAULT_COVER_URL}'">
+        </div>
+        <div class="station-info-group">
+          <span class="station-title-bold">${escapeHtml(st.name.toUpperCase())}</span>
+          <span class="station-sub-text">${escapeHtml(genreStr)}</span>
+          <div class="mini-eq-bars">
+            <div class="mini-bar"></div>
+            <div class="mini-bar"></div>
+            <div class="mini-bar"></div>
+            <div class="mini-bar"></div>
+          </div>
+        </div>
+        <span class="station-listeners-count">${listeners}</span>
+      </div>
+    `;
+  }).join("");
+}
+
 
 async function loadStations() {
   const data = await apiFetchOrWarn("/stations", {}, "Failed to load stations");
@@ -222,6 +282,7 @@ async function loadStations() {
         }
       });
     }
+    renderStationCards();
     renderHistory();
     if (typeof fetchDislikedSongs === "function") {
       fetchDislikedSongs();
@@ -229,29 +290,201 @@ async function loadStations() {
   }
 }
 
+
+async function renderProviders() {
+  if (!providerList) return;
+  providerList.innerHTML = '<p style="color: var(--text-muted);">Loading providers...</p>';
+  const providers = await auth.getProviders();
+  if (!providers || providers.length === 0) {
+    providerList.innerHTML = '<button type="button" class="provider-btn" id="demoLoginBtn">Sign in as Demo Listener</button>';
+  } else {
+    providerList.innerHTML = providers.map(p => `
+      <button type="button" class="provider-btn" data-provider="${p.id}">
+        ${p.icon_url ? `<img src="${p.icon_url}" alt="" style="width:20px;height:20px;">` : '🔐'}
+        Sign in with ${escapeHtml(p.name)}
+      </button>
+    `).join('');
+  }
+}
+
 document.addEventListener("click", (e) => {
+  const providerBtn = e.target.closest(".provider-btn");
+  if (providerBtn) {
+    const providerId = providerBtn.dataset.provider || "demo";
+    auth.login(providerId);
+    return;
+  }
+
+  const stationCard = e.target.closest(".station-card");
+  if (stationCard) {
+    const stId = Number(stationCard.dataset.stationId);
+    const st = stationsList.find((s) => Number(s.id) === stId);
+    if (st) {
+      selectStation(st, true);
+    }
+    return;
+  }
+
   const btn = e.target.closest(".station-click-btn");
-  if (!btn) return;
+  if (btn) {
+    e.preventDefault();
+    e.stopPropagation();
 
-  e.preventDefault();
-  e.stopPropagation();
+    const stId = btn.dataset.stationId;
+    const artistName = btn.dataset.artist;
 
-  const stId = btn.dataset.stationId;
-  const artistName = btn.dataset.artist;
+    let station = null;
+    if (artistName && stationsList.length) {
+      station = findStationByArtist(artistName, stationsList);
+    }
+    if (!station && stId && stationsList.length) {
+      station = stationsList.find((s) => Number(s.id) === Number(stId));
+    }
 
-  let station = null;
-  if (artistName && stationsList.length) {
-    station = findStationByArtist(artistName, stationsList);
-  }
-  if (!station && stId && stationsList.length) {
-    station = stationsList.find((s) => Number(s.id) === Number(stId));
-  }
-
-  if (station) {
-    selectStation(station, true);
+    if (station) {
+      selectStation(station, true);
+    }
+    return;
   }
 });
 
-setInterval(pollMetadata, METADATA_POLL_MS);
-fetchDislikedSongs();
-loadStations();
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    auth.logout();
+  });
+}
+
+// Rating button proxies
+const rateUpBtn = document.getElementById("rateUpBtn");
+const rateDownBtn = document.getElementById("rateDownBtn");
+const thumbUp = document.getElementById("thumbUp");
+const thumbDown = document.getElementById("thumbDown");
+if (rateUpBtn && thumbUp) rateUpBtn.addEventListener("click", () => thumbUp.click());
+if (rateDownBtn && thumbDown) rateDownBtn.addEventListener("click", () => thumbDown.click());
+
+
+// Hero CTAs
+const heroBtnSignIn = document.getElementById("heroBtnSignIn");
+const heroBtnRegister = document.getElementById("heroBtnRegister");
+if (heroBtnSignIn) {
+  heroBtnSignIn.addEventListener("click", () => {
+    switchToTab("signin");
+    document.getElementById("loginEmail")?.focus();
+  });
+}
+if (heroBtnRegister) {
+  heroBtnRegister.addEventListener("click", () => {
+    switchToTab("register");
+    document.getElementById("regFullName")?.focus();
+  });
+}
+
+const authFormTitle = document.getElementById("authFormTitle");
+const authFormSubtitle = document.getElementById("authFormSubtitle");
+const authFooterText = document.getElementById("authFooterText");
+const authFooterToggleLink = document.getElementById("authFooterToggleLink");
+let currentAuthMode = "signin";
+
+function setAuthMode(mode) {
+  currentAuthMode = mode;
+  if (mode === "signin") {
+    if (loginForm) loginForm.style.display = "flex";
+    if (registerForm) registerForm.style.display = "none";
+    if (authFormTitle) authFormTitle.textContent = "Welcome back";
+    if (authFormSubtitle) authFormSubtitle.textContent = "Please enter your details to sign in to your account";
+    if (authFooterText) authFooterText.textContent = "Don't have an account?";
+    if (authFooterToggleLink) authFooterToggleLink.textContent = "Sign up for free";
+  } else {
+    if (registerForm) registerForm.style.display = "flex";
+    if (loginForm) loginForm.style.display = "none";
+    if (authFormTitle) authFormTitle.textContent = "Create an account";
+    if (authFormSubtitle) authFormSubtitle.textContent = "Please fill out your details to get started";
+    if (authFooterText) authFooterText.textContent = "Already have an account?";
+    if (authFooterToggleLink) authFooterToggleLink.textContent = "Sign in";
+  }
+}
+
+if (authFooterToggleLink) {
+  authFooterToggleLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    setAuthMode(currentAuthMode === "signin" ? "register" : "signin");
+  });
+}
+
+
+// Form submission handlers
+const loginForm = document.getElementById("loginForm");
+const loginError = document.getElementById("loginError");
+const registerForm = document.getElementById("registerForm");
+const registerError = document.getElementById("registerError");
+
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (loginError) loginError.style.display = "none";
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+    try {
+      await auth.loginEmailPassword(email, password);
+    } catch (err) {
+      if (loginError) {
+        loginError.textContent = err.message || "Invalid credentials.";
+        loginError.style.display = "block";
+      }
+    }
+  });
+}
+
+if (registerForm) {
+  registerForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (registerError) registerError.style.display = "none";
+    const fullName = document.getElementById("regFullName").value;
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPassword").value;
+    try {
+      await auth.registerEmailPassword(email, password, fullName);
+    } catch (err) {
+      if (registerError) {
+        registerError.textContent = err.message || "Registration failed.";
+        registerError.style.display = "block";
+      }
+    }
+  });
+}
+
+// Authentication state listener & view gating
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    // Authenticated state
+    if (authScreen) authScreen.style.display = "none";
+    if (authenticatedApp) authenticatedApp.style.display = "block";
+    if (stationNav) stationNav.style.display = "flex";
+    if (userProfileNav) userProfileNav.style.display = "flex";
+
+    if (navUserName) navUserName.textContent = user.full_name || user.email;
+    if (navUserAvatar && user.avatar_url) {
+      navUserAvatar.src = user.avatar_url;
+      navUserAvatar.style.display = "inline-block";
+    }
+
+    if (!isAppInitialized) {
+      isAppInitialized = true;
+      await loadStations();
+      setInterval(pollMetadata, METADATA_POLL_MS);
+    }
+  } else {
+    // Unauthenticated state
+    if (authScreen) authScreen.style.display = "flex";
+    if (authenticatedApp) authenticatedApp.style.display = "none";
+    if (stationNav) stationNav.style.display = "none";
+    if (userProfileNav) userProfileNav.style.display = "none";
+
+    renderProviders();
+  }
+});
+
+// Check user state on startup
+auth.getUser();
+
+

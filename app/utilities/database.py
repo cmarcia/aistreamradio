@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-from app.config import settings
+from app.Configuration.config import settings
 
 # check_same_thread is required for SQLite when used across FastAPI's threads.
 connect_args = (

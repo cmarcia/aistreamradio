@@ -9,10 +9,10 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app import schemas
-from app.config import settings
-from app.icy import fetch_icy_metadata
-from app.logging_config import logger
+from app.utilities import schemas
+from app.Configuration.config import settings
+from app.Configuration.logging_config import logger
+from app.utilities.icy import fetch_icy_metadata
 from app.repositories.deps import get_station_repository
 from app.repositories.stations import StationRepository
 
