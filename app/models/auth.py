@@ -39,6 +39,8 @@ class User(Base):
     oauth_accounts: Mapped[list[OAuthAccount]] = relationship(
         "OAuthAccount", back_populates="user", cascade="all, delete-orphan"
     )
+    ratings: Mapped[list[SongRating]] = relationship("SongRating", back_populates="user")
+
 
 
 class OAuthAccount(Base):

@@ -13,15 +13,18 @@ from app.routers import api_router
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)
 
-# Ensure hashed_password column exists on pre-existing SQLite database tables
 with engine.connect() as conn:
     from sqlalchemy import text
+    try:
+        conn.execute(text("ALTER TABLE song_ratings ADD COLUMN user_id VARCHAR;"))
+        conn.commit()
+    except Exception:
+        pass
     try:
         conn.execute(text("ALTER TABLE users ADD COLUMN hashed_password VARCHAR;"))
         conn.commit()
     except Exception:
         pass
-
 
 from starlette.middleware.sessions import SessionMiddleware
 from app.Configuration.auth_config import auth_settings
@@ -35,6 +38,8 @@ app = FastAPI(title=settings.app_name)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SessionMiddleware, secret_key=auth_settings.auth_secret_key)
+
+
 
 
 

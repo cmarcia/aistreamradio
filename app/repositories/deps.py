@@ -10,6 +10,9 @@ from app.repositories.stations import StationRepository
 from app.repositories.users import UserRepository
 
 
+from app.repositories.users import UserRepository
+
+
 def get_genre_repository(db: Session = Depends(get_db)) -> GenreRepository:
     return GenreRepository(db)
 

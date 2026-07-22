@@ -90,6 +90,9 @@ async function fetchTrackCoverArt(artist, title, album) {
 
   if (data.cover_url) {
     currentTrackCoverUrl = data.cover_url;
+    if (lastMeta) {
+      lastMeta.cover_url = data.cover_url;
+    }
     if (coverArt) {
       coverArt.src = data.cover_url;
     }
@@ -111,7 +114,6 @@ function applyMetadata(meta) {
     const key = (meta.artist || "") + " — " + meta.title;
     if (key !== currentTrackKey) {
       isNewTrack = true;
-      currentTrackCoverUrl = null;
     }
     if (
       currentTrackKey !== null &&
@@ -120,17 +122,21 @@ function applyMetadata(meta) {
       lastMeta.has_track_info !== false &&
       lastMeta.title
     ) {
+      const coverForHistory = lastMeta.cover_url || currentTrackCoverUrl || (lastMeta._station_id ? `/stations/${lastMeta._station_id}/cover` : null);
       history = addToHistory(
         history,
         {
           artist: lastMeta.artist,
           title: lastMeta.title,
+          cover_url: coverForHistory,
           station_id: lastMeta._station_id || (currentStation ? currentStation.id : null),
         },
         HISTORY_LIMIT
       );
       renderHistory();
+      currentTrackCoverUrl = null;
     }
+
     currentTrackKey = key;
     trackName.textContent = meta.title;
     artistName.textContent = meta.artist || "Unknown Artist";
@@ -190,10 +196,11 @@ function applyMetadata(meta) {
 }
 
 async function pollMetadata() {
-  if (!METADATA_URL || !auth.currentUser) return;
+  if (!METADATA_URL) return;
   const meta = await apiFetchOrWarn(METADATA_URL, { cache: "no-store" }, "metadata fetch failed");
   if (meta) applyMetadata(meta);
 }
+
 
 function selectStation(st, autoPlay = false) {
   if (!st) return;

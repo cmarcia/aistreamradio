@@ -33,6 +33,7 @@ from app.models.song_artist import song_artists
 from app.models.song_rating import SongRating
 from app.models.station import Station
 
+
 __all__ = [
     "Album",
     "Artist",

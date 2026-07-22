@@ -7,6 +7,29 @@ from app.schemas.auth import OAuthProviderInfo, SessionResponse, TokenPayload, U
 
 
 
+class UserRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    full_name: str | None = None
+    avatar_url: str | None = None
+    is_active: bool = True
+    created_at: datetime
+
+
+class UserRegister(BaseModel):
+    email: str
+    password: str = Field(min_length=8)
+    full_name: str | None = None
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+
 class GenreBase(BaseModel):
     name: str
     description: str | None = None
@@ -57,9 +80,10 @@ class Station(StationBase):
 class SongRatingCreate(BaseModel):
     artist: str
     title: str
-    listener_id: str
+    listener_id: str | None = None
     rating: Literal["up", "down"]
     cover_image: str | None = Field(default=None, max_length=2_000_000)
+
 
 
 class SongRatingSummary(BaseModel):

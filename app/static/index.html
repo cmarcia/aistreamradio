@@ -155,10 +155,12 @@
 
         <!-- Central Synthwave Visualizer Display Container -->
         <div class="visualizer-display-card">
+          <img class="cover-art-img" id="coverArt" alt="Album cover art" crossorigin="anonymous">
           <div class="visualizer-grid-landscape">
             <div class="synth-sun"></div>
             <div class="vector-landscape-grid"></div>
           </div>
+
 
           
           <div class="visualizer" id="visualizer">
@@ -197,8 +199,8 @@
           </div>
 
           <div class="control-actions">
-            <button class="btn-ctrl-icon" id="rateUpBtn" title="Like">👍 <span id="thumbUpCount">0</span></button>
-            <button class="btn-ctrl-icon" id="rateDownBtn" title="Dislike">👎 <span id="thumbDownCount">0</span></button>
+            <button class="btn-ctrl-icon" id="thumbUp" title="Like">👍 <span id="thumbUpCount">0</span></button>
+            <button class="btn-ctrl-icon" id="thumbDown" title="Dislike">👎 <span id="thumbDownCount">0</span></button>
             <button class="btn-ctrl-icon" id="prevTrackBtn" title="Previous Track">⏮</button>
             
             <button class="btn-play-pause" id="playBtn" aria-label="Play/Pause">
@@ -212,23 +214,22 @@
           </div>
         </div>
 
-        <!-- Hidden compat elements for rating JS -->
-        <button id="thumbUp" style="display:none"></button>
-        <button id="thumbDown" style="display:none"></button>
         <span id="stationGenrePill" style="display:none"></span>
+
         <span id="sourceQuality" style="display:none"></span>
         <span id="streamQuality" style="display:none"></span>
         <div id="statusMsg" style="display:none"></div>
       </main>
 
-      <!-- 3. RIGHT SIDEBAR PANEL: UP NEXT & FAVORITE STATIONS -->
+      <!-- 3. RIGHT SIDEBAR PANEL: PREVIOUS TRACKS & DISLIKED SONGS -->
       <aside class="right-sidebar-panel">
         
         <div class="sidebar-section">
           <div class="section-title">
-            <h3>UP NEXT</h3>
+            <h3>PREVIOUS TRACKS:</h3>
             <span class="dots">•••</span>
           </div>
+
           <ul id="historyList" class="up-next-list">
             <li class="empty">Nothing played yet this session.</li>
           </ul>

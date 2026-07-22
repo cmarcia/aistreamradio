@@ -579,6 +579,27 @@ img {
   box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), var(--glow-cyan);
 }
 
+.cover-art-img {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 170px;
+  height: 170px;
+  object-fit: cover;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), var(--glow-cyan);
+  border: 2px solid var(--border-cyan);
+  z-index: 4;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cover-art-img:hover {
+  transform: translate(-50%, -50%) scale(1.04);
+  box-shadow: 0 14px 38px rgba(0, 243, 255, 0.5), var(--glow-magenta);
+}
+
+
 
 .visualizer-grid-landscape {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;

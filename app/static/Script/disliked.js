@@ -31,10 +31,11 @@ function renderDislikedSongs(page) {
 
 async function fetchDislikedSongs() {
   const params = new URLSearchParams({
-    listener_id: listenerId,
+    listener_id: getListenerId(),
     page: dislikedPage,
     page_size: DISLIKED_PAGE_SIZE,
   });
+
   const page = await apiFetchOrWarn(
     API_PATHS.DISLIKED + "?" + params.toString(),
     undefined,

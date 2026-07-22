@@ -1,17 +1,33 @@
-const thumbUp = document.getElementById("thumbUp");
-const thumbDown = document.getElementById("thumbDown");
-const thumbUpCount = document.getElementById("thumbUpCount");
-const thumbDownCount = document.getElementById("thumbDownCount");
-
 let currentSong = null; // { artist, title, has_track_info }
 let rated = null;
 
+function getThumbUpBtn() {
+  return document.getElementById("thumbUp") || document.getElementById("rateUpBtn");
+}
+
+function getThumbDownBtn() {
+  return document.getElementById("thumbDown") || document.getElementById("rateDownBtn");
+}
+
+function getThumbUpCount() {
+  return document.getElementById("thumbUpCount");
+}
+
+function getThumbDownCount() {
+  return document.getElementById("thumbDownCount");
+}
+
 function renderRatingSummary(summary) {
-  thumbUpCount.textContent = summary.thumbs_up;
-  thumbDownCount.textContent = summary.thumbs_down;
+  const upCount = getThumbUpCount();
+  const downCount = getThumbDownCount();
+  if (upCount) upCount.textContent = summary.thumbs_up;
+  if (downCount) downCount.textContent = summary.thumbs_down;
   rated = summary.user_rating;
-  thumbUp.classList.toggle("active", rated === "up");
-  thumbDown.classList.toggle("active", rated === "down");
+
+  const btnUp = getThumbUpBtn();
+  const btnDown = getThumbDownBtn();
+  if (btnUp) btnUp.classList.toggle("active", rated === "up");
+  if (btnDown) btnDown.classList.toggle("active", rated === "down");
 }
 
 async function fetchRatingSummary() {
@@ -19,7 +35,7 @@ async function fetchRatingSummary() {
   const params = new URLSearchParams({
     artist: currentSong.artist,
     title: currentSong.title,
-    listener_id: listenerId,
+    listener_id: getListenerId(),
   });
   const summary = await apiFetchOrWarn(
     API_PATHS.RATING + "?" + params.toString(),
@@ -32,12 +48,13 @@ async function fetchRatingSummary() {
 // coverArt is defined in main.js — it owns the "now playing" cover art
 // element, since it's the one that sets coverArt.src from live metadata.
 function captureCoverSnapshot() {
-  if (!coverArt || !coverArt.naturalWidth) return null;
+  const coverEl = document.getElementById("coverArt");
+  if (!coverEl || !coverEl.naturalWidth) return null;
   try {
     const canvas = document.createElement("canvas");
-    canvas.width = coverArt.naturalWidth;
-    canvas.height = coverArt.naturalHeight;
-    canvas.getContext("2d").drawImage(coverArt, 0, 0);
+    canvas.width = coverEl.naturalWidth;
+    canvas.height = coverEl.naturalHeight;
+    canvas.getContext("2d").drawImage(coverEl, 0, 0);
     return canvas.toDataURL("image/jpeg", 0.85);
   } catch (err) {
     console.warn("cover snapshot failed", err);
@@ -46,7 +63,9 @@ function captureCoverSnapshot() {
 }
 
 async function setRating(kind) {
-  if (!currentSong || currentSong.has_track_info === false || !currentSong.title || rated) return;
+  if (!currentSong || currentSong.has_track_info === false || !currentSong.title) return;
+  if (rated === kind) return;
+
   const summary = await apiFetchOrWarn(
     API_PATHS.RATING,
     {
@@ -55,30 +74,45 @@ async function setRating(kind) {
       body: JSON.stringify({
         artist: currentSong.artist,
         title: currentSong.title,
-        listener_id: listenerId,
+        listener_id: getListenerId(),
         rating: kind,
         cover_image: kind === "down" ? captureCoverSnapshot() : null,
       }),
     },
     "rating submit failed"
   );
+
   if (!summary) return;
   renderRatingSummary(summary);
   if (kind === "down") {
     skipDislikedTrack();
-    resetDislikedToFirstPage();
+    if (typeof resetDislikedToFirstPage === "function") {
+      resetDislikedToFirstPage();
+    }
   }
 }
-if (thumbUp) thumbUp.addEventListener("click", () => setRating("up"));
-if (thumbDown) thumbDown.addEventListener("click", () => setRating("down"));
 
-// We can't seek forward on a live broadcast, so "skip" mutes playback
-// until the metadata poll reports a different track, then unmutes.
+document.addEventListener("click", (e) => {
+  const upBtn = e.target.closest("#thumbUp, #rateUpBtn");
+  if (upBtn) {
+    e.preventDefault();
+    setRating("up");
+    return;
+  }
+  const downBtn = e.target.closest("#thumbDown, #rateDownBtn");
+  if (downBtn) {
+    e.preventDefault();
+    setRating("down");
+    return;
+  }
+});
+
 let skippingSong = null;
 function skipDislikedTrack() {
   skippingSong = currentSong;
-  audio.muted = true;
-  setStatus("Skipping disliked track…");
+  const audioEl = document.getElementById("audio");
+  if (audioEl) audioEl.muted = true;
+  if (typeof setStatus === "function") setStatus("Skipping disliked track…");
 }
 
 function maybeEndSkip() {
@@ -89,28 +123,32 @@ function maybeEndSkip() {
     currentSong.title === skippingSong.title;
   if (!stillSameSong) {
     skippingSong = null;
-    audio.muted = false;
-    setStatus("");
+    const audioEl = document.getElementById("audio");
+    if (audioEl) audioEl.muted = false;
+    if (typeof setStatus === "function") setStatus("");
   }
 }
 
-// Called by main.js whenever the live metadata poll reports a (possibly
-// unchanged) "now playing" track.
 function onTrackChanged(song) {
   currentSong = song;
   const hasTrack = song && song.has_track_info !== false && Boolean(song.title);
 
-  if (thumbUp) thumbUp.disabled = !hasTrack;
-  if (thumbDown) thumbDown.disabled = !hasTrack;
+  const btnUp = getThumbUpBtn();
+  const btnDown = getThumbDownBtn();
+  if (btnUp) btnUp.disabled = !hasTrack;
+  if (btnDown) btnDown.disabled = !hasTrack;
 
   if (hasTrack) {
     fetchRatingSummary();
   } else {
     rated = null;
-    if (thumbUpCount) thumbUpCount.textContent = "0";
-    if (thumbDownCount) thumbDownCount.textContent = "0";
-    if (thumbUp) thumbUp.classList.remove("active");
-    if (thumbDown) thumbDown.classList.remove("active");
+    const upCount = getThumbUpCount();
+    const downCount = getThumbDownCount();
+    if (upCount) upCount.textContent = "0";
+    if (downCount) downCount.textContent = "0";
+    if (btnUp) btnUp.classList.remove("active");
+    if (btnDown) btnDown.classList.remove("active");
   }
   maybeEndSkip();
 }
+

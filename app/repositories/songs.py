@@ -45,7 +45,16 @@ class SongRepository:
 
         return song
 
-    def get_existing_rating(self, song_id: int, listener_id: str) -> models.SongRating | None:
+    def get_existing_rating(
+        self, song_id: int, listener_id: str, user_id: str | None = None
+    ) -> models.SongRating | None:
+        if user_id:
+            return self.db.scalar(
+                select(models.SongRating).where(
+                    models.SongRating.song_id == song_id,
+                    (models.SongRating.user_id == user_id) | (models.SongRating.listener_id == listener_id),
+                )
+            )
         return self.db.scalar(
             select(models.SongRating).where(
                 models.SongRating.song_id == song_id,
@@ -53,15 +62,23 @@ class SongRepository:
             )
         )
 
-    def rate_song(self, song_id: int, listener_id: str, rating: str) -> models.SongRating:
-        rating_obj = models.SongRating(song_id=song_id, listener_id=listener_id, rating=rating)
+    def rate_song(
+        self, song_id: int, listener_id: str, rating: str, user_id: str | None = None
+    ) -> models.SongRating:
+        effective_listener_id = user_id if user_id else listener_id
+        rating_obj = models.SongRating(
+            song_id=song_id,
+            listener_id=effective_listener_id,
+            user_id=user_id,
+            rating=rating,
+        )
         self.db.add(rating_obj)
         self.db.commit()
         self.db.refresh(rating_obj)
         return rating_obj
 
     def get_rating_summary(
-        self, song: models.Song, listener_id: str | None = None
+        self, song: models.Song, listener_id: str | None = None, user_id: str | None = None
     ) -> schemas.SongRatingSummary:
         thumbs_up = self.db.scalar(
             select(func.count()).select_from(models.SongRating).where(
@@ -74,8 +91,8 @@ class SongRepository:
             )
         )
         user_rating = None
-        if listener_id:
-            existing = self.get_existing_rating(song.id, listener_id)
+        if listener_id or user_id:
+            existing = self.get_existing_rating(song.id, listener_id or "", user_id=user_id)
             user_rating = existing.rating if existing else None
 
         return schemas.SongRatingSummary(
@@ -87,19 +104,25 @@ class SongRepository:
         )
 
     def get_disliked_songs(
-        self, listener_id: str, page: int, page_size: int
+        self, listener_id: str, page: int, page_size: int, user_id: str | None = None
     ) -> tuple[Sequence[tuple[str, str, str | None, datetime]], int]:
+        condition = (
+            (models.SongRating.user_id == user_id) | (models.SongRating.listener_id == listener_id)
+            if user_id
+            else (models.SongRating.listener_id == listener_id)
+        )
+
         disliked_songs_query = (
             select(models.Song, models.SongRating.created_at)
             .join(models.SongRating, models.SongRating.song_id == models.Song.id)
-            .where(models.SongRating.listener_id == listener_id, models.SongRating.rating == "down")
+            .where(condition, models.SongRating.rating == "down")
             .options(joinedload(models.Song.artists))
         )
 
         total = self.db.scalar(
             select(func.count()).select_from(
                 select(models.SongRating.id)
-                .where(models.SongRating.listener_id == listener_id, models.SongRating.rating == "down")
+                .where(condition, models.SongRating.rating == "down")
                 .subquery()
             )
         ) or 0
@@ -116,5 +139,6 @@ class SongRepository:
         ]
 
         return formatted_rows, total
+
 
 

@@ -4,6 +4,9 @@ const API_PATHS = {
 };
 
 function getListenerId() {
+  if (window.currentUser && window.currentUser.id) {
+    return window.currentUser.id;
+  }
   let id = localStorage.getItem("listenerId");
   if (!id) {
     id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
@@ -11,6 +14,7 @@ function getListenerId() {
   }
   return id;
 }
+
 const listenerId = getListenerId();
 
 function escapeHtml(str) {
