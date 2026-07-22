@@ -16,6 +16,26 @@ class AuthSettings(BaseSettings):
     google_client_secret: str | None = None
     microsoft_client_id: str | None = None
     microsoft_client_secret: str | None = None
+    microsoft_tenant_id: str = "common"
+
+
+    def get_cookie_secure(self, environment: str = "development") -> bool:
+        if environment.lower() == "production":
+            return True
+        return self.cookie_secure
+
 
 
 auth_settings = AuthSettings()
+
+
+def validate_security_configuration(environment: str = "development") -> bool:
+    """Validates that secret keys and security options are production-safe."""
+    default_key = "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY_MIN_32_BYTES"
+    if environment.lower() == "production":
+        if auth_settings.auth_secret_key == default_key or len(auth_settings.auth_secret_key) < 32:
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: AUTH_SECRET_KEY must be configured with a strong secret (min 32 chars) in production."
+            )
+    return True
+

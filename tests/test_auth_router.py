@@ -98,3 +98,16 @@ def test_register_and_login_with_email_password(client):
     assert good_login.status_code == 200
     assert good_login.json()["email"] == "newlistener@cyber.io"
 
+
+def test_dev_login_disabled_in_production(client):
+    from app.Configuration.config import settings
+    original_env = settings.environment
+    try:
+        settings.environment = "production"
+        res = client.post("/auth/dev-login")
+        assert res.status_code == 403
+        assert "disabled" in res.json()["detail"]
+    finally:
+        settings.environment = original_env
+
+

@@ -1,5 +1,6 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
 
 
 class OAuthProviderInfo(BaseModel):
@@ -10,8 +11,16 @@ class OAuthProviderInfo(BaseModel):
 
 class UserRegister(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8, description="Minimum 8 characters")
     full_name: str | None = None
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        if not any(c.isalpha() for c in v) or not any(c.isdigit() or not c.isalnum() for c in v):
+            raise ValueError("Password must contain at least one letter and at least one digit or special character.")
+        return v
+
 
 
 class UserLogin(BaseModel):

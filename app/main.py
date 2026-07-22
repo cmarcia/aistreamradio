@@ -23,7 +23,20 @@ with engine.connect() as conn:
         pass
 
 
+from starlette.middleware.sessions import SessionMiddleware
+from app.Configuration.auth_config import auth_settings
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title=settings.app_name)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SessionMiddleware, secret_key=auth_settings.auth_secret_key)
+
+
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

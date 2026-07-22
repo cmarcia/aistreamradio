@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     default_primary_color: str = "#00f3ff"
     default_secondary_color: str = "#3b82f6"
     log_level: str = "INFO"
+    environment: str = "development"
+
 
 
 settings = Settings()

@@ -98,3 +98,48 @@ def test_user_repository_account_linking(db_session):
 def test_auth_service_list_enabled_providers():
     providers = AuthService.list_enabled_providers()
     assert isinstance(providers, list)
+
+
+def test_validate_security_configuration_production_check():
+    from app.Configuration.auth_config import validate_security_configuration, auth_settings
+    # Development mode allows fallback default key
+    assert validate_security_configuration(environment="development") is True
+
+    # Production mode enforces non-default key with >= 32 chars
+    original_key = auth_settings.auth_secret_key
+    try:
+        auth_settings.auth_secret_key = "CHANGE_THIS_IN_PRODUCTION_SECRET_KEY_MIN_32_BYTES"
+        with pytest.raises(ValueError) as exc_info:
+            validate_security_configuration(environment="production")
+        assert "CRITICAL SECURITY ERROR" in str(exc_info.value)
+    finally:
+        auth_settings.auth_secret_key = original_key
+
+
+
+def test_password_schema_validation_rules():
+    from app.schemas.auth import UserRegister
+
+    # 1. Short password (< 8 chars)
+    with pytest.raises(Exception):
+        UserRegister(email="short@test.io", password="pass1")
+
+    # 2. Password missing digits/special characters
+    with pytest.raises(ValueError) as exc:
+        UserRegister(email="nodigits@test.io", password="passwordonly")
+    assert "at least one letter and at least one digit" in str(exc.value)
+
+    # 3. Valid strong password
+    valid_user = UserRegister(email="valid@test.io", password="StrongPassword123!")
+    assert valid_user.password == "StrongPassword123!"
+
+
+def test_cookie_secure_production_enforcement():
+    from app.Configuration.auth_config import auth_settings
+    # Development mode respects config
+    assert auth_settings.get_cookie_secure(environment="development") == auth_settings.cookie_secure
+
+    # Production mode enforces Secure=True
+    assert auth_settings.get_cookie_secure(environment="production") is True
+
+

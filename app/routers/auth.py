@@ -53,12 +53,18 @@ async def login_provider(
 
     auth_service = AuthService(user_repo)
     redirect_uri = str(request.url_for("auth_callback", provider=provider))
+    if request.headers.get("x-forwarded-proto") == "https" or request.headers.get("x-forwarded-ssl") == "on":
+        redirect_uri = redirect_uri.replace("http://", "https://", 1)
+
     try:
         return await auth_service.get_login_redirect(request, provider, redirect_uri)
+
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
         )
+
+
 
 
 @router.post("/dev-login")
@@ -67,7 +73,14 @@ def dev_login(
     user_repo: UserRepository = Depends(get_user_repository),
 ):
     """Programmatic login for development and testing."""
+    from app.Configuration.config import settings
+    if settings.environment.lower() != "development":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Development login endpoint is disabled in non-development environments.",
+        )
     user = user_repo.upsert_from_oauth({
+
         "provider": "demo",
         "provider_user_id": "demo-user-123",
         "email": "listener@aistreamradio.com",
@@ -127,8 +140,16 @@ async def auth_callback(
         )
 
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
+
 @router.post("/register", response_model=UserRead)
+@limiter.limit("10/minute")
 def register_user(
+    request: Request,
     data: UserRegister,
     response: Response,
     user_repo: UserRepository = Depends(get_user_repository),
@@ -159,11 +180,14 @@ def register_user(
 
 
 @router.post("/login", response_model=UserRead)
+@limiter.limit("15/minute")
 def login_with_password(
+    request: Request,
     data: UserLogin,
     response: Response,
     user_repo: UserRepository = Depends(get_user_repository),
 ):
+
     """Authenticates an existing user with email and password."""
     user = user_repo.authenticate_with_password(data.email, data.password)
     if not user:

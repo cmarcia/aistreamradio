@@ -48,46 +48,20 @@
     </div>
   </header>
 
-  <!-- Split-Screen Morva Labs Styled Auth Screen -->
+  <!-- Centered Morva Labs Styled Auth Screen -->
   <div id="authScreen" class="auth-screen">
     <div class="morva-auth-layout">
-      
-      <!-- Left Column: Hero Branding Showcase -->
-      <div class="auth-showcase-card">
-        <div class="showcase-badge">⚡ MORVA LABS NEURAL RADIO</div>
-        <h1 class="showcase-title">Experience Live AI Stream Radio</h1>
-        <p class="showcase-description">
-          Connect to high-definition AI broadcasts, automated ICY telemetry, and multi-station frequencies in real time.
-        </p>
-
-        <div class="showcase-floating-metric">
-          <div class="metric-icon">📡</div>
-          <div class="metric-info">
-            <span class="metric-number">142,000+</span>
-            <span class="metric-label">Active Listeners Streamed Daily</span>
-          </div>
-        </div>
-
-        <div class="showcase-features-grid">
-          <div class="showcase-feature">
-            <span class="dot-cyan"></span>
-            <span>Lossless 48kHz HLS Audio Stream</span>
-          </div>
-          <div class="showcase-feature">
-            <span class="dot-magenta"></span>
-            <span>Automated iTunes Cover Art Lookup</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column: Login & Register Form Card -->
+      <!-- Centered Login & Register Form Card -->
       <div class="auth-form-card">
+
         
         <!-- Header Text -->
         <div class="form-card-header">
-          <h2 id="authFormTitle">Welcome back</h2>
+          <h2 id="authFormTitle" class="auth-header-pill">Welcome back</h2>
           <p id="authFormSubtitle">Please enter your details to sign in to your account</p>
         </div>
+
+
 
         <!-- Social OAuth Provider Buttons -->
         <div id="providerList" class="provider-list">
@@ -159,11 +133,12 @@
   <div id="authenticatedApp" class="authenticated-app" style="display:none">
     <div class="synth-console-grid">
       
-      <!-- 1. LEFT PANEL: POPULAR STATIONS -->
+      <!-- 1. LEFT PANEL: RADIO STATIONS -->
       <aside class="popular-stations-panel">
         <div class="section-title">
-          <h3>POPULAR STATIONS</h3>
+          <h3>RADIO STATIONS:</h3>
         </div>
+
         <div class="stations-cards-column" id="stationCardsList">
           <p class="loading-text">Loading station grid...</p>
         </div>

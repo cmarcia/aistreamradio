@@ -19,13 +19,15 @@ if auth_settings.google_client_id and auth_settings.google_client_secret:
 
 # Dynamically Register Microsoft Provider if credentials present
 if auth_settings.microsoft_client_id and auth_settings.microsoft_client_secret:
+    tenant_id = auth_settings.microsoft_tenant_id or "common"
     oauth.register(
         name="microsoft",
         client_id=auth_settings.microsoft_client_id,
         client_secret=auth_settings.microsoft_client_secret,
-        server_metadata_url="https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration",
+        server_metadata_url=f"https://login.microsoftonline.com/{tenant_id}/v2.0/.well-known/openid-configuration",
         client_kwargs={"scope": "openid email profile"},
     )
+
 
 
 class AuthService:
