@@ -9,6 +9,9 @@ from app.repositories.songs import SongRepository
 from app.repositories.stations import StationRepository
 
 
+from app.repositories.users import UserRepository
+
+
 def get_genre_repository(db: Session = Depends(get_db)) -> GenreRepository:
     return GenreRepository(db)
 
@@ -27,4 +30,9 @@ def get_artist_repository(db: Session = Depends(get_db)) -> ArtistRepository:
 
 def get_album_repository(db: Session = Depends(get_db)) -> AlbumRepository:
     return AlbumRepository(db)
+
+
+def get_user_repository(db: Session = Depends(get_db)) -> UserRepository:
+    return UserRepository(db)
+
 

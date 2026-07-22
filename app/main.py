@@ -13,7 +13,16 @@ from app.routers import api_router
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)
 
+with engine.connect() as conn:
+    from sqlalchemy import text
+    try:
+        conn.execute(text("ALTER TABLE song_ratings ADD COLUMN user_id VARCHAR;"))
+        conn.commit()
+    except Exception:
+        pass
+
 app = FastAPI(title=settings.app_name)
+
 
 STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")

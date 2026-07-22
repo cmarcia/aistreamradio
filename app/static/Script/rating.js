@@ -19,7 +19,7 @@ async function fetchRatingSummary() {
   const params = new URLSearchParams({
     artist: currentSong.artist,
     title: currentSong.title,
-    listener_id: listenerId,
+    listener_id: getListenerId(),
   });
   const summary = await apiFetchOrWarn(
     API_PATHS.RATING + "?" + params.toString(),
@@ -55,13 +55,14 @@ async function setRating(kind) {
       body: JSON.stringify({
         artist: currentSong.artist,
         title: currentSong.title,
-        listener_id: listenerId,
+        listener_id: getListenerId(),
         rating: kind,
         cover_image: kind === "down" ? captureCoverSnapshot() : null,
       }),
     },
     "rating submit failed"
   );
+
   if (!summary) return;
   renderRatingSummary(summary);
   if (kind === "down") {
